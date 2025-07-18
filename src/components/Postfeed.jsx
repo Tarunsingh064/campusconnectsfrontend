@@ -24,17 +24,7 @@ const PostsFeed = () => {
     try {
       const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/');
       const data = await res.json();
-      // Ensure at least 3 posts have images for demo purposes
-      const postsWithImages = data.map((post, index) => {
-        if (index < 3 && !post.media) {
-          return {
-            ...post,
-            media: `https://source.unsplash.com/random/600x400/?tech,${index}`
-          };
-        }
-        return post;
-      });
-      setPosts(postsWithImages);
+      setPosts(data);
     } catch (error) {
       console.error('Failed to fetch posts:', error);
     } finally {
@@ -42,14 +32,116 @@ const PostsFeed = () => {
     }
   };
 
-  // ... (keep all other existing functions unchanged)
+  const handleCreate = async () => {
+    if (!text.trim() && !media) {
+      alert('Please add some text or media to post.');
+      return;
+    }
+
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('text', text);
+    if (media) formData.append('media', media);
+
+    try {
+      const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${Cookies.get('access_token')}`,
+        },
+        body: formData,
+      });
+
+      if (res.ok) {
+        const newPost = await res.json();
+        setPosts([newPost, ...posts]);
+        setText('');
+        setMedia(null);
+        setShowCreate(false);
+      } else {
+        const errData = await res.json();
+        console.error('Failed to create post:', errData);
+        alert('Post failed');
+      }
+    } catch (error) {
+      console.error('Error creating post:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${id}/`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${Cookies.get('access_token')}`,
+        },
+      });
+      if (res.ok) {
+        setPosts((prev) => prev.filter((post) => post.id !== id));
+      } else {
+        console.error('Delete failed');
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = async (id, newText) => {
+    if (!newText.trim()) {
+      alert('Text cannot be empty.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('text', newText);
+
+    try {
+      const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${id}/`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${Cookies.get('access_token')}`,
+        },
+        body: formData,
+      });
+
+      if (res.ok) {
+        const updatedPost = await res.json();
+        setPosts((prev) => prev.map((post) => (post.id === id ? updatedPost : post)));
+      } else {
+        console.error('Edit failed', await res.json());
+        alert('Edit failed');
+      }
+    } catch (error) {
+      console.error('Error editing post:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   const PostCard = ({ post }) => {
     const isOwner = user?.username === post.owner_username;
-    const isImage = post.media?.match(/\.(jpeg|jpg|png|webp)$/) || post.media?.includes('unsplash.com');
+    const isImage = post.media?.match(/\.(jpeg|jpg|png|webp)$/);
     const isVideo = post.media?.match(/\.(mp4|webm)$/);
 
-    // ... (keep all other PostCard functions unchanged)
+    const handleEditClick = () => {
+      const newText = prompt('Edit your post:', post.text);
+      if (newText && newText !== post.text) {
+        handleEdit(post.id, newText);
+      }
+    };
+
+    const handleDeleteClick = () => {
+      if (confirm('Are you sure you want to delete this post?')) {
+        handleDelete(post.id);
+      }
+    };
 
     return (
       <motion.div
@@ -213,8 +305,8 @@ const PostsFeed = () => {
         className="flex-1 overflow-y-auto pr-2"
         style={{ 
           scrollbarWidth: 'thin',
-          height: 'calc(100vh - 180px)', // Fixed height based on viewport
-          maxHeight: 'calc(100vh - 180px)'
+          height: '600px', // Fixed height to show exactly 3 posts
+          maxHeight: '600px'
         }}
       >
         {posts.length === 0 && !loading ? (
@@ -231,9 +323,11 @@ const PostsFeed = () => {
             </button>
           </div>
         ) : (
-          posts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))
+          <div className="space-y-4">
+            {posts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
         )}
       </div>
     </div>
