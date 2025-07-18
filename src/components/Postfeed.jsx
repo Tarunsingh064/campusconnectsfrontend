@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/context/AuthContext'; // make sure this path is correct
+import { useAuth } from '@/Authcontext/Authcontext'; // make sure this path is correct
 
 const PostsFeed = () => {
   const { user } = useAuth();
