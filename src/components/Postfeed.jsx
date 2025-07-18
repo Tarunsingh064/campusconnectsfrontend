@@ -124,10 +124,10 @@ const PostsFeed = () => {
         {post.media && (
           <div className="rounded-lg overflow-hidden mt-2">
             {isImage ? (
-              <img src={media} alt="Post media" className="w-full h-auto rounded-md" />
+              <img src={post.media} alt="Post media" className="w-full h-auto rounded-md" />
             ) : isVideo ? (
               <video controls className="w-full rounded-md">
-                <source src={media} />
+                <source src={post.media} />
                 Your browser does not support the video tag.
               </video>
             ) : (
