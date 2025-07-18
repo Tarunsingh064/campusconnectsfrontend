@@ -30,7 +30,9 @@ const PostsFeed = () => {
       const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${Cookies.get('access_token')}`,
+          "Content-Type": "application/json",
+
+          "Authorization": `Bearer ${Cookies.get('access_token')}`,
         },
         body: formData,
       });
