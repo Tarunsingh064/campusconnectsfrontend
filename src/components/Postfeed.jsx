@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/context/AuthContext'; // ✅ import AuthContext
+import { useAuth } from '@/Authcontext/Authcontext'; // ✅ import AuthContext
 
 const PostsFeed = () => {
   const [posts, setPosts] = useState([]);
