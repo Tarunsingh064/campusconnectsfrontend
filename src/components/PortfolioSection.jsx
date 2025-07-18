@@ -27,8 +27,8 @@ export default function PortfolioSection() {
     if (user?.username) fetchBio();
   }, [user]);
 
-  // Use Cloudinary media if available, otherwise fallback
-  const profilePicUrl = bio?.media || '/placeholder-user.png';
+  const isImage = bio?.media?.match(/\.(jpeg|jpg|png|webp)$/i);
+  const profilePicUrl = isImage ? bio.media : null;
 
   return (
     <div className="h-screen flex items-center justify-center p-4">
@@ -49,12 +49,21 @@ export default function PortfolioSection() {
 
           <div className="flex justify-center">
             <div className="w-24 h-24 relative rounded-full overflow-hidden border-4 border-[#6366f1] shadow-md">
-              <Image
-                src={profilePicUrl}
-                alt="Profile Image"
-                fill
-                className="object-cover"
-              />
+              {profilePicUrl ? (
+                <Image
+                  src={profilePicUrl}
+                  alt="Profile Image"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <Image
+                  src="/placeholder-user.png"
+                  alt="Default Profile"
+                  fill
+                  className="object-cover"
+                />
+              )}
             </div>
           </div>
 
