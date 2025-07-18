@@ -22,30 +22,36 @@ const PostsFeed = () => {
 
   // Create new post
   const handleCreate = async () => {
-    const formData = new FormData();
-    formData.append('text', text);
-    if (media) formData.append('media', media);
+  const formData = new FormData();
+  formData.append('text', text);
+  if (media) formData.append('media', media);
 
-    try {
-      const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${Cookies.get('access_token')}`,
-        },
-        body: formData,
-      });
-      if (res.ok) {
-        const newPost = await res.json();
-        setPosts([newPost, ...posts]);
-        setText('');
-        setMedia(null);
-      } else {
-        console.error('Create post failed');
-      }
-    } catch (error) {
-      console.error('Error creating post:', error);
+  try {
+    const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${Cookies.get('access_token')}`,
+        // ⚠️ DO NOT set 'Content-Type' for FormData — browser will handle it
+      },
+      body: formData,
+    });
+
+    if (res.ok) {
+      const newPost = await res.json();
+      setPosts([newPost, ...posts]);
+      setText('');
+      setMedia(null);
+    } else {
+      const errorData = await res.json().catch(() => ({})); // fallback if not JSON
+      console.error('Create post failed:', res.status, errorData);
+      alert(`Failed to create post: ${res.status}`);
     }
-  };
+  } catch (error) {
+    console.error('Error creating post:', error);
+    alert('Network error while creating post.');
+  }
+};
+
 
   // Delete post
   const handleDelete = async (id) => {
