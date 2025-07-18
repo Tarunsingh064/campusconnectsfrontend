@@ -3,18 +3,16 @@
 import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { formatDistanceToNow } from 'date-fns';
-import { useAuth } from '@/Authcontext/Authcontext';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/Authcontext/Authcontext'; // make sure this path is correct
 
 const PostsFeed = () => {
   const { user } = useAuth();
-
   const [posts, setPosts] = useState([]);
   const [text, setText] = useState('');
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch all posts
   const fetchPosts = async () => {
     setLoading(true);
     try {
@@ -28,17 +26,12 @@ const PostsFeed = () => {
     }
   };
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  // Create new post
   const handleCreate = async () => {
+    setLoading(true);
     const formData = new FormData();
     formData.append('text', text);
     if (media) formData.append('media', media);
 
-    setLoading(true);
     try {
       const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/', {
         method: 'POST',
@@ -66,7 +59,6 @@ const PostsFeed = () => {
     }
   };
 
-  // Delete post
   const handleDelete = async (id) => {
     setLoading(true);
     try {
@@ -88,7 +80,6 @@ const PostsFeed = () => {
     }
   };
 
-  // Edit post
   const handleEdit = async (id, newText) => {
     try {
       const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${id}/`, {
@@ -110,10 +101,11 @@ const PostsFeed = () => {
     }
   };
 
-  const PostCard = ({ post }) => {
-    const postOwnerUsername = typeof post.owner === 'object' ? post.owner?.username : post.owner;
-    const isUserOwner = user?.username === postOwnerUsername;
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
+  const PostCard = ({ post }) => {
     const isImage = post.media?.endsWith('.jpg') || post.media?.endsWith('.png') || post.media?.endsWith('.jpeg') || post.media?.endsWith('.webp');
     const isVideo = post.media?.endsWith('.mp4') || post.media?.endsWith('.webm');
 
@@ -137,19 +129,18 @@ const PostsFeed = () => {
       >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg uppercase">
-            {postOwnerUsername?.[0] || 'U'}
+            {post.owner?.username?.[0] || 'U'}
           </div>
           <div>
-            <h2 className="font-semibold text-gray-900 dark:text-white">{postOwnerUsername}</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-white">
+              {post.owner?.username}
+            </h2>
             <p className="text-xs text-gray-500">
               {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
             </p>
           </div>
         </div>
-
-        {post.text && (
-          <p className="text-sm text-gray-800 dark:text-gray-100 whitespace-pre-wrap">{post.text}</p>
-        )}
+        <p className="text-sm text-gray-800 dark:text-gray-100 whitespace-pre-wrap">{post.text}</p>
 
         {post.media && (
           <div className="rounded-lg overflow-hidden">
@@ -166,58 +157,66 @@ const PostsFeed = () => {
           </div>
         )}
 
-        {isUserOwner && (
-          <div className="flex gap-2 text-sm">
-            <button onClick={handleEditClick} className="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600">Edit</button>
-            <button onClick={handleDeleteClick} className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600">Delete</button>
-          </div>
-        )}
+        <div className="flex gap-2 text-sm">
+          {user?.username === post.owner?.username && (
+            <>
+              <button onClick={handleEditClick} className="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600">Edit</button>
+              <button onClick={handleDeleteClick} className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600">Delete</button>
+            </>
+          )}
+        </div>
       </motion.div>
     );
   };
 
   return (
-    <div className="space-y-4">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
+      {/* Refresh */}
+      <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl shadow">
+        <button
+          onClick={fetchPosts}
+          className="bg-gray-200 dark:bg-gray-700 text-sm px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+        >
+          🔄 Refresh
+        </button>
+        {loading && <p className="text-blue-600 dark:text-blue-400 text-sm">Loading...</p>}
+      </div>
+
       {/* Create Post Form */}
-      <div className="p-4 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded">
+      <div className="p-4 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl shadow space-y-3">
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="What's on your mind?"
-          className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded mb-2"
+          className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded resize-none"
         />
         <input
           type="file"
           accept="image/*,video/*"
           onChange={(e) => setMedia(e.target.files[0])}
-          className="mb-2"
+          className="w-full"
         />
         <button
           onClick={handleCreate}
-          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          className="bg-blue-600 text-white px-4 py-2 rounded w-full hover:bg-blue-700 disabled:opacity-50"
           disabled={loading}
         >
           {loading ? 'Posting...' : 'Post'}
         </button>
-        <button
-          onClick={fetchPosts}
-          className="ml-2 bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-          disabled={loading}
-        >
-          {loading ? 'Refreshing...' : 'Refresh'}
-        </button>
       </div>
 
-      {/* Loader */}
-      {loading && <p className="text-center text-gray-500">Loading...</p>}
-
-      {/* All Posts */}
-      <div className="overflow-y-auto max-h-[600px] divide-y divide-gray-200 dark:divide-gray-700">
+      {/* All Posts Feed Scrollable */}
+      <div className="grid gap-4 max-h-[75vh] overflow-y-auto pr-2">
         {posts.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
