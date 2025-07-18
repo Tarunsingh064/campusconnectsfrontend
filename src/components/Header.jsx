@@ -30,8 +30,8 @@ export default function Header() {
             <Link href="/" className="text-white font-medium hover:text-cyan-400 border-b-2 border-cyan-400 pb-1">
               Home
             </Link>
-            <Link href="/projects" className="text-gray-400 hover:text-white transition">
-              Projects
+            <Link href="/Auth/portfolio" className="text-gray-400 hover:text-white transition">
+              Portfolio
             </Link>
             <Link href="/about" className="text-gray-400 hover:text-white transition">
               About
@@ -111,7 +111,7 @@ export default function Header() {
       {menuOpen && (
         <div className="md:hidden mt-4 flex flex-col gap-4">
           <Link href="/" className="text-white hover:text-cyan-400">Home</Link>
-          <Link href="/projects" className="text-white hover:text-cyan-400">Projects</Link>
+          <Link href="/Auth/portfolio" className="text-white hover:text-cyan-400">Portfolio</Link>
           <Link href="/about" className="text-white hover:text-cyan-400">About</Link>
 
           {user ? (
