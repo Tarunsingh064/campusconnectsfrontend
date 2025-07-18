@@ -11,12 +11,32 @@ export const AuthProvider = ({ children }) => {
   const router = useRouter();
   const [user, setUser] = useState(null);
 
+  const cookieOptions = {
+    sameSite: 'Strict',
+    secure: true,       // ensures cookies only sent over HTTPS
+    expires: 7,         // optional: expires in 7 days
+  };
+
+  // Load user on mount
   useEffect(() => {
     const access = Cookies.get('access_token');
+    const refresh = Cookies.get('refresh_token');
     const userData = Cookies.get('user');
 
     if (access && userData) {
       setUser(JSON.parse(userData));
+    } else if (refresh && userData) {
+      // Attempt silent token refresh
+      axios
+        .post('https://campusconnect-ki0p.onrender.com/api/user/token/refresh/', { refresh })
+        .then((res) => {
+          Cookies.set('access_token', res.data.access, cookieOptions);
+          setUser(JSON.parse(userData));
+        })
+        .catch(() => {
+          logout();
+          router.push('/Auth/login');
+        });
     } else {
       router.push('/Auth/login');
     }
@@ -28,10 +48,6 @@ export const AuthProvider = ({ children }) => {
       password,
     });
 
-    const cookieOptions = {
-      sameSite: 'Strict',
-    };
-
     Cookies.set('access_token', res.data.access, cookieOptions);
     Cookies.set('refresh_token', res.data.refresh, cookieOptions);
     Cookies.set('user', JSON.stringify(res.data.user), cookieOptions);
@@ -41,7 +57,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    console.log('Logging out...');
     Cookies.remove('access_token');
     Cookies.remove('refresh_token');
     Cookies.remove('user');
@@ -76,7 +91,6 @@ export const AuthProvider = ({ children }) => {
 
           const refresh = Cookies.get('refresh_token');
           if (!refresh) {
-            console.warn('No refresh token, user probably logged out.');
             return Promise.reject(error);
           }
 
@@ -86,9 +100,7 @@ export const AuthProvider = ({ children }) => {
             });
 
             const newAccess = res.data.access;
-            Cookies.set('access_token', newAccess, {
-              sameSite: 'Strict',
-            });
+            Cookies.set('access_token', newAccess, cookieOptions);
 
             originalRequest.headers.Authorization = `Bearer ${newAccess}`;
             return axios(originalRequest);
