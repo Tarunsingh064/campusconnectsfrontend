@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import Cookies from 'js-cookie';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/Authcontext/Authcontext'; // ✅ Ensure this is correct
+import { useAuth } from '@/Authcontext/Authcontext';
 
 const PostsFeed = () => {
   const [posts, setPosts] = useState([]);
@@ -12,7 +12,7 @@ const PostsFeed = () => {
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
   const feedRef = useRef();
-  const { user } = useAuth(); // ✅ Current logged-in user
+  const { user } = useAuth();
 
   useEffect(() => {
     if (feedRef.current) feedRef.current.scrollTop = 0;
@@ -32,42 +32,41 @@ const PostsFeed = () => {
   };
 
   const handleCreate = async () => {
-  if (!text.trim() && !media) {
-    alert('Please add some text or media to post.');
-    return;
-  }
-
-  setLoading(true);
-  const formData = new FormData();
-  formData.append('text', text);
-  if (media) formData.append('media', media);
-
-  try {
-    const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${Cookies.get('access_token')}`,
-      },
-      body: formData,
-    });
-
-    if (res.ok) {
-      const newPost = await res.json();
-      setPosts([newPost, ...posts]);
-      setText('');
-      setMedia(null);
-    } else {
-      const errData = await res.json();
-      console.error('Failed to create post:', errData);
-      alert('Post failed');
+    if (!text.trim() && !media) {
+      alert('Please add some text or media to post.');
+      return;
     }
-  } catch (error) {
-    console.error('Error creating post:', error);
-  } finally {
-    setLoading(false);
-  }
-};
 
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('text', text);
+    if (media) formData.append('media', media);
+
+    try {
+      const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${Cookies.get('access_token')}`,
+        },
+        body: formData,
+      });
+
+      if (res.ok) {
+        const newPost = await res.json();
+        setPosts([newPost, ...posts]);
+        setText('');
+        setMedia(null);
+      } else {
+        const errData = await res.json();
+        console.error('Failed to create post:', errData);
+        alert('Post failed');
+      }
+    } catch (error) {
+      console.error('Error creating post:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDelete = async (id) => {
     setLoading(true);
@@ -91,42 +90,41 @@ const PostsFeed = () => {
   };
 
   const handleEdit = async (id, newText) => {
-  if (!newText.trim()) {
-    alert('Text cannot be empty.');
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append('text', newText); // Only updating text
-
-  try {
-    const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${id}/`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${Cookies.get('access_token')}`,
-      },
-      body: formData,
-    });
-
-    if (res.ok) {
-      const updatedPost = await res.json();
-      setPosts((prev) => prev.map((post) => (post.id === id ? updatedPost : post)));
-    } else {
-      console.error('Edit failed', await res.json());
-      alert('Edit failed');
+    if (!newText.trim()) {
+      alert('Text cannot be empty.');
+      return;
     }
-  } catch (error) {
-    console.error('Error editing post:', error);
-  }
-};
 
+    const formData = new FormData();
+    formData.append('text', newText);
+
+    try {
+      const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${id}/`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${Cookies.get('access_token')}`,
+        },
+        body: formData,
+      });
+
+      if (res.ok) {
+        const updatedPost = await res.json();
+        setPosts((prev) => prev.map((post) => (post.id === id ? updatedPost : post)));
+      } else {
+        console.error('Edit failed', await res.json());
+        alert('Edit failed');
+      }
+    } catch (error) {
+      console.error('Error editing post:', error);
+    }
+  };
 
   useEffect(() => {
     fetchPosts();
   }, []);
 
   const PostCard = ({ post }) => {
-    const isOwner = user?.username === post.owner_username; // ✅ Ownership check
+    const isOwner = user?.username === post.owner_username;
     const isImage = post.media?.match(/\.(jpeg|jpg|png|webp)$/);
     const isVideo = post.media?.match(/\.(mp4|webm)$/);
 
@@ -144,15 +142,19 @@ const PostsFeed = () => {
     };
 
     return (
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }} 
-        animate={{ opacity: 1, y: 0 }} 
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-md space-y-3"
+        className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-md space-y-3"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full overflow-hidden">
-            <img src={`https://ui-avatars.com/api/?name=${post.owner_username}`} alt="avatar" className="w-full h-full object-cover" />
+          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-700 rounded-full overflow-hidden">
+            <img
+              src={`https://ui-avatars.com/api/?name=${post.owner_username}`}
+              alt="avatar"
+              className="w-full h-full object-cover"
+            />
           </div>
           <div>
             <h2 className="font-semibold text-gray-900 dark:text-white">{post.owner_username}</h2>
@@ -162,10 +164,10 @@ const PostsFeed = () => {
           </div>
         </div>
 
-        <p className="text-sm text-gray-800 dark:text-gray-100 whitespace-pre-wrap">{post.text}</p>
+        <p className="text-base text-gray-800 dark:text-gray-100 whitespace-pre-wrap">{post.text}</p>
 
         {post.media && (
-          <div className="rounded-lg overflow-hidden">
+          <div className="rounded-lg overflow-hidden mt-2">
             {isImage ? (
               <img src={post.media} alt="Post media" className="w-full h-auto rounded-md" />
             ) : isVideo ? (
@@ -178,11 +180,20 @@ const PostsFeed = () => {
           </div>
         )}
 
-        {/* ✅ Show buttons only if owner */}
         {isOwner && (
-          <div className="flex gap-2 text-sm">
-            <button onClick={handleEditClick} className="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600">Edit</button>
-            <button onClick={handleDeleteClick} className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600">Delete</button>
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={handleEditClick}
+              className="bg-yellow-500 text-white px-4 py-1.5 rounded-lg hover:bg-yellow-600 transition"
+            >
+              ✏️ Edit
+            </button>
+            <button
+              onClick={handleDeleteClick}
+              className="bg-red-500 text-white px-4 py-1.5 rounded-lg hover:bg-red-600 transition"
+            >
+              🗑️ Delete
+            </button>
           </div>
         )}
       </motion.div>
@@ -190,48 +201,51 @@ const PostsFeed = () => {
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="space-y-6"
+      className="flex flex-col gap-6 max-h-screen overflow-hidden"
     >
-      {/* Refresh */}
-      <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl shadow">
+      {/* Refresh Header */}
+      <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl shadow-md p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <button
           onClick={fetchPosts}
-          className="bg-gray-200 dark:bg-gray-700 text-sm px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+          className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold px-4 py-2 rounded-lg hover:brightness-110 transition"
         >
           🔄 Refresh
         </button>
-        {loading && <p className="text-blue-600 dark:text-blue-400 text-sm">Loading...</p>}
+        {loading && <span className="text-blue-600 dark:text-blue-400 text-sm">Loading...</span>}
       </div>
 
       {/* Create Form */}
-      <div className="p-4 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl shadow space-y-3">
+      <div className="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-2xl shadow-lg p-6 space-y-4">
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="What's on your mind?"
-          className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded resize-none"
+          placeholder="✍️ Share your thoughts..."
+          className="w-full h-28 p-3 rounded-lg border border-gray-300 dark:border-gray-700 resize-none text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 placeholder:text-gray-400 dark:placeholder:text-gray-500"
         />
         <input
           type="file"
           accept="image/*,video/*"
           onChange={(e) => setMedia(e.target.files[0])}
-          className="w-full"
+          className="w-full text-sm text-gray-700 dark:text-gray-300"
         />
         <button
           onClick={handleCreate}
-          className="bg-blue-600 text-white px-4 py-2 rounded w-full hover:bg-blue-700 disabled:opacity-50"
           disabled={loading}
+          className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
         >
-          {loading ? 'Posting...' : 'Post'}
+          {loading ? 'Posting...' : '🚀 Post'}
         </button>
       </div>
 
-      {/* Posts */}
-      <div ref={feedRef} className="grid gap-4 max-h-[70vh] overflow-y-auto pr-2">
+      {/* Posts Feed */}
+      <div
+        ref={feedRef}
+        className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-transparent pr-2 max-h-[65vh] grid gap-6"
+      >
         {posts.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}
