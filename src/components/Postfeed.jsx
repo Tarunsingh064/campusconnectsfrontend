@@ -1,25 +1,18 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/Authcontext/Authcontext'; // ✅ import AuthContext
 
 const PostsFeed = () => {
   const [posts, setPosts] = useState([]);
   const [text, setText] = useState('');
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
-  const feedRef = useRef();
+  const { user } = useAuth(); // ✅ get logged-in user
 
-  // Scroll to top on new post
-  useEffect(() => {
-    if (feedRef.current) {
-      feedRef.current.scrollTop = 0;
-    }
-  }, [posts]);
-
-  // Fetch all posts
   const fetchPosts = async () => {
     setLoading(true);
     try {
@@ -33,7 +26,6 @@ const PostsFeed = () => {
     }
   };
 
-  // Create new post
   const handleCreate = async () => {
     setLoading(true);
     const formData = new FormData();
@@ -67,7 +59,6 @@ const PostsFeed = () => {
     }
   };
 
-  // Delete post
   const handleDelete = async (id) => {
     setLoading(true);
     try {
@@ -89,7 +80,6 @@ const PostsFeed = () => {
     }
   };
 
-  // Edit post
   const handleEdit = async (id, newText) => {
     try {
       const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${id}/`, {
@@ -131,23 +121,26 @@ const PostsFeed = () => {
     };
 
     return (
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }} 
-        animate={{ opacity: 1, y: 0 }} 
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
         className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-md space-y-3"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full overflow-hidden">
-            <img src={`https://ui-avatars.com/api/?name=${post.owner.username}`} alt="avatar" className="w-full h-full object-cover" />
+          <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg uppercase">
+            {post.owner?.username?.[0] || 'U'}
           </div>
           <div>
-            <h2 className="font-semibold text-gray-900 dark:text-white">{post.owner.username}</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-white">
+              {post.owner?.username === user?.username ? 'You' : post.owner?.username}
+            </h2>
             <p className="text-xs text-gray-500">
               {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
             </p>
           </div>
         </div>
+
         <p className="text-sm text-gray-800 dark:text-gray-100 whitespace-pre-wrap">{post.text}</p>
 
         {post.media && (
@@ -165,20 +158,22 @@ const PostsFeed = () => {
           </div>
         )}
 
-        <div className="flex gap-2 text-sm">
-          <button onClick={handleEditClick} className="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600">Edit</button>
-          <button onClick={handleDeleteClick} className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600">Delete</button>
-        </div>
+        {post.owner?.username === user?.username && (
+          <div className="flex gap-2 text-sm">
+            <button onClick={handleEditClick} className="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600">Edit</button>
+            <button onClick={handleDeleteClick} className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600">Delete</button>
+          </div>
+        )}
       </motion.div>
     );
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="space-y-6"
+      className="space-y-6 max-h-[85vh] overflow-y-auto pr-2"
     >
       {/* Refresh */}
       <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl shadow">
@@ -215,7 +210,7 @@ const PostsFeed = () => {
       </div>
 
       {/* All Posts */}
-      <div ref={feedRef} className="grid gap-4 max-h-[70vh] overflow-y-auto pr-2">
+      <div className="grid gap-4">
         {posts.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}
