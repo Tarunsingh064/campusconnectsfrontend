@@ -4,14 +4,15 @@ import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/Authcontext/Authcontext'; // ✅ import AuthContext
+import { useAuth } from '@/context/AuthContext';
 
 const PostsFeed = () => {
   const [posts, setPosts] = useState([]);
   const [text, setText] = useState('');
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth(); // ✅ get logged-in user
+
+  const { user } = useAuth();
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -27,6 +28,11 @@ const PostsFeed = () => {
   };
 
   const handleCreate = async () => {
+    if (!text && !media) {
+      alert("Please add text or media.");
+      return;
+    }
+
     setLoading(true);
     const formData = new FormData();
     formData.append('text', text);
@@ -106,6 +112,8 @@ const PostsFeed = () => {
   }, []);
 
   const PostCard = ({ post }) => {
+    const isOwner = user?.username === post.owner;
+
     const isImage = post.media?.endsWith('.jpg') || post.media?.endsWith('.png') || post.media?.endsWith('.jpeg') || post.media?.endsWith('.webp');
     const isVideo = post.media?.endsWith('.mp4') || post.media?.endsWith('.webm');
 
@@ -120,6 +128,8 @@ const PostsFeed = () => {
       handleDelete(post.id);
     };
 
+    const firstLetter = post.owner?.charAt(0)?.toUpperCase();
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -128,20 +138,20 @@ const PostsFeed = () => {
         className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-md space-y-3"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg uppercase">
-            {post.owner?.username?.[0] || 'U'}
+          <div className="w-10 h-10 bg-yellow-400 text-white rounded-full flex items-center justify-center font-bold text-lg">
+            {firstLetter}
           </div>
           <div>
-            <h2 className="font-semibold text-gray-900 dark:text-white">
-              {post.owner?.username === user?.username ? 'You' : post.owner?.username}
-            </h2>
+            <h2 className="font-semibold text-gray-900 dark:text-white">{post.owner}</h2>
             <p className="text-xs text-gray-500">
               {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
             </p>
           </div>
         </div>
 
-        <p className="text-sm text-gray-800 dark:text-gray-100 whitespace-pre-wrap">{post.text}</p>
+        {post.text && (
+          <p className="text-sm text-gray-800 dark:text-gray-100 whitespace-pre-wrap">{post.text}</p>
+        )}
 
         {post.media && (
           <div className="rounded-lg overflow-hidden">
@@ -158,7 +168,7 @@ const PostsFeed = () => {
           </div>
         )}
 
-        {post.owner?.username === user?.username && (
+        {isOwner && (
           <div className="flex gap-2 text-sm">
             <button onClick={handleEditClick} className="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600">Edit</button>
             <button onClick={handleDeleteClick} className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600">Delete</button>
@@ -173,9 +183,9 @@ const PostsFeed = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="space-y-6 max-h-[85vh] overflow-y-auto pr-2"
+      className="space-y-6 max-h-screen overflow-y-auto pb-24"
     >
-      {/* Refresh */}
+      {/* Refresh Header */}
       <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl shadow">
         <button
           onClick={fetchPosts}
@@ -186,7 +196,7 @@ const PostsFeed = () => {
         {loading && <p className="text-blue-600 dark:text-blue-400 text-sm">Loading...</p>}
       </div>
 
-      {/* Create Post Form */}
+      {/* Create Post */}
       <div className="p-4 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl shadow space-y-3">
         <textarea
           value={text}
@@ -209,7 +219,7 @@ const PostsFeed = () => {
         </button>
       </div>
 
-      {/* All Posts */}
+      {/* Post Feed */}
       <div className="grid gap-4">
         {posts.map((post) => (
           <PostCard key={post.id} post={post} />
