@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import Cookies from 'js-cookie';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/Authcontext/Authcontext'; // ✅ Ensure this is correct
 
 const PostsFeed = () => {
   const [posts, setPosts] = useState([]);
@@ -11,15 +12,12 @@ const PostsFeed = () => {
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
   const feedRef = useRef();
+  const { user } = useAuth(); // ✅ Current logged-in user
 
-  // Scroll to top on new post
   useEffect(() => {
-    if (feedRef.current) {
-      feedRef.current.scrollTop = 0;
-    }
+    if (feedRef.current) feedRef.current.scrollTop = 0;
   }, [posts]);
 
-  // Fetch all posts
   const fetchPosts = async () => {
     setLoading(true);
     try {
@@ -33,7 +31,6 @@ const PostsFeed = () => {
     }
   };
 
-  // Create new post
   const handleCreate = async () => {
     setLoading(true);
     const formData = new FormData();
@@ -55,19 +52,16 @@ const PostsFeed = () => {
         setText('');
         setMedia(null);
       } else {
-        const errorData = await res.json().catch(() => ({}));
-        console.error('Create post failed:', res.status, errorData);
-        alert(`Failed to create post: ${res.status}`);
+        console.error('Failed to create post:', await res.json());
+        alert('Post failed');
       }
     } catch (error) {
       console.error('Error creating post:', error);
-      alert('Network error while creating post.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Delete post
   const handleDelete = async (id) => {
     setLoading(true);
     try {
@@ -89,7 +83,6 @@ const PostsFeed = () => {
     }
   };
 
-  // Edit post
   const handleEdit = async (id, newText) => {
     try {
       const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${id}/`, {
@@ -116,8 +109,9 @@ const PostsFeed = () => {
   }, []);
 
   const PostCard = ({ post }) => {
-    const isImage = post.media?.endsWith('.jpg') || post.media?.endsWith('.png') || post.media?.endsWith('.jpeg') || post.media?.endsWith('.webp');
-    const isVideo = post.media?.endsWith('.mp4') || post.media?.endsWith('.webm');
+    const isOwner = user?.username === post.owner_username; // ✅ Ownership check
+    const isImage = post.media?.match(/\.(jpeg|jpg|png|webp)$/);
+    const isVideo = post.media?.match(/\.(mp4|webm)$/);
 
     const handleEditClick = () => {
       const newText = prompt('Edit your post:', post.text);
@@ -127,7 +121,9 @@ const PostsFeed = () => {
     };
 
     const handleDeleteClick = () => {
-      handleDelete(post.id);
+      if (confirm('Are you sure you want to delete this post?')) {
+        handleDelete(post.id);
+      }
     };
 
     return (
@@ -148,6 +144,7 @@ const PostsFeed = () => {
             </p>
           </div>
         </div>
+
         <p className="text-sm text-gray-800 dark:text-gray-100 whitespace-pre-wrap">{post.text}</p>
 
         {post.media && (
@@ -157,7 +154,6 @@ const PostsFeed = () => {
             ) : isVideo ? (
               <video controls className="w-full rounded-md">
                 <source src={post.media} />
-                Your browser does not support the video tag.
               </video>
             ) : (
               <p className="text-xs text-gray-400">Unsupported media</p>
@@ -165,10 +161,13 @@ const PostsFeed = () => {
           </div>
         )}
 
-        <div className="flex gap-2 text-sm">
-          <button onClick={handleEditClick} className="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600">Edit</button>
-          <button onClick={handleDeleteClick} className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600">Delete</button>
-        </div>
+        {/* ✅ Show buttons only if owner */}
+        {isOwner && (
+          <div className="flex gap-2 text-sm">
+            <button onClick={handleEditClick} className="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600">Edit</button>
+            <button onClick={handleDeleteClick} className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600">Delete</button>
+          </div>
+        )}
       </motion.div>
     );
   };
@@ -191,7 +190,7 @@ const PostsFeed = () => {
         {loading && <p className="text-blue-600 dark:text-blue-400 text-sm">Loading...</p>}
       </div>
 
-      {/* Create Post Form */}
+      {/* Create Form */}
       <div className="p-4 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl shadow space-y-3">
         <textarea
           value={text}
@@ -214,7 +213,7 @@ const PostsFeed = () => {
         </button>
       </div>
 
-      {/* All Posts */}
+      {/* Posts */}
       <div ref={feedRef} className="grid gap-4 max-h-[70vh] overflow-y-auto pr-2">
         {posts.map((post) => (
           <PostCard key={post.id} post={post} />
