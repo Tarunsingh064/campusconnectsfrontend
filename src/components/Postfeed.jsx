@@ -244,7 +244,7 @@ const PostsFeed = () => {
       {/* Posts Feed */}
       <div
         ref={feedRef}
-        className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-transparent pr-2 max-h-[65vh] grid gap-6"
+        className="flex-1 overflow-y-auto pr-2 max-h-[65vh] grid gap-6"
       >
         {posts.map((post) => (
           <PostCard key={post.id} post={post} />
