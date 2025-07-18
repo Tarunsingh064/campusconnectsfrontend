@@ -27,9 +27,6 @@ export default function PortfolioSection() {
     if (user?.username) fetchBio();
   }, [user]);
 
-  const isImage = bio?.media?.match(/\.(jpeg|jpg|png|webp)$/i);
-  const profilePicUrl = isImage ? bio.media : null;
-
   return (
     <div className="h-screen flex items-center justify-center p-4">
       <motion.div
@@ -41,29 +38,20 @@ export default function PortfolioSection() {
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#6366f1]/20 via-transparent to-[#ec4899]/20 blur-[2px] pointer-events-none" />
 
         <div className="relative z-10 space-y-5 h-full overflow-y-auto custom-scroll text-white">
-          {/* Username and Profile Image */}
+          {/* Username and Header */}
           <div className="text-center">
             <h2 className="text-2xl font-semibold break-words">{user?.username}</h2>
             <p className="text-sm text-gray-400">User Portfolio</p>
           </div>
 
+          {/* Always Show Media */}
           <div className="flex justify-center">
             <div className="w-24 h-24 relative rounded-full overflow-hidden border-4 border-[#6366f1] shadow-md">
-              {profilePicUrl ? (
-                <Image
-                  src={profilePicUrl}
-                  alt="Profile Image"
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <Image
-                  src="/placeholder-user.png"
-                  alt="Default Profile"
-                  fill
-                  className="object-cover"
-                />
-              )}
+              <img
+                src={bio?.media || '/placeholder-user.png'}
+                alt="User Media"
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
 
