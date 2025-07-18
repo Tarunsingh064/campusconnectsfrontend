@@ -107,8 +107,7 @@ export default function Page() {
     transition={{ duration: 0.6 }}
     className="space-y-4"
   >
-    <RefreshButton />
-    <CreatePostForm />
+    
     <PostsFeed />
   </motion.div>
 </main>
