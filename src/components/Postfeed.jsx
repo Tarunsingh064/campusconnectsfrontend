@@ -11,6 +11,7 @@ const PostsFeed = () => {
   const [text, setText] = useState('');
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const feedRef = useRef();
   const { user } = useAuth();
 
@@ -56,6 +57,7 @@ const PostsFeed = () => {
         setPosts([newPost, ...posts]);
         setText('');
         setMedia(null);
+        setShowCreate(false);
       } else {
         const errData = await res.json();
         console.error('Failed to create post:', errData);
@@ -218,34 +220,41 @@ const PostsFeed = () => {
         {loading && <span className="text-blue-600 dark:text-blue-400 text-sm">Loading...</span>}
       </div>
 
+      {/* Toggle Create Form */}
+      <button
+        onClick={() => setShowCreate(!showCreate)}
+        className="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 transition w-fit self-center"
+      >
+        {showCreate ? '❌ Cancel' : '➕ Share something'}
+      </button>
+
       {/* Create Form */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-2xl shadow-lg p-6 space-y-4">
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="✍️ Share your thoughts..."
-          className="w-full h-28 p-3 rounded-lg border border-gray-300 dark:border-gray-700 resize-none text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-        />
-        <input
-          type="file"
-          accept="image/*,video/*"
-          onChange={(e) => setMedia(e.target.files[0])}
-          className="w-full text-sm text-gray-700 dark:text-gray-300"
-        />
-        <button
-          onClick={handleCreate}
-          disabled={loading}
-          className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-        >
-          {loading ? 'Posting...' : '🚀 Post'}
-        </button>
-      </div>
+      {showCreate && (
+        <div className="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-2xl shadow-lg p-6 space-y-4">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="✍️ Share your thoughts..."
+            className="w-full h-28 p-3 rounded-lg border border-gray-300 dark:border-gray-700 resize-none text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+          />
+          <input
+            type="file"
+            accept="image/*,video/*"
+            onChange={(e) => setMedia(e.target.files[0])}
+            className="w-full text-sm text-gray-700 dark:text-gray-300"
+          />
+          <button
+            onClick={handleCreate}
+            disabled={loading}
+            className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+          >
+            {loading ? 'Posting...' : '🚀 Post'}
+          </button>
+        </div>
+      )}
 
       {/* Posts Feed */}
-      <div
-        ref={feedRef}
-        className="flex-1 overflow-y-auto pr-2 max-h-[65vh] grid gap-6"
-      >
+      <div ref={feedRef} className="flex-1 overflow-y-auto pr-2 max-h-[65vh] grid gap-6">
         {posts.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}
