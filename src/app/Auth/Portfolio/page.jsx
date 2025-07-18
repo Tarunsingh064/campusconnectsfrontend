@@ -5,17 +5,26 @@ import { motion } from 'framer-motion';
 
 export default function Portfolio() {
   const [portfolios, setPortfolios] = useState([]);
+  const [nextPageUrl, setNextPageUrl] = useState('https://campusconnect-ki0p.onrender.com/api/userbio/portfolio/port/');
+  const [loading, setLoading] = useState(false);
+
+  const fetchPortfolios = async () => {
+    if (!nextPageUrl) return;
+
+    setLoading(true);
+    try {
+      const res = await axios.get(nextPageUrl);
+      setPortfolios(prev => [...prev, ...res.data.results]); // Append new results
+      setNextPageUrl(res.data.next); // Update to next page URL (or null)
+    } catch (err) {
+      console.error('Error fetching portfolios:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPortfolios = async () => {
-      try {
-        const res = await axios.get('https://campusconnect-ki0p.onrender.com/api/userbio/portfolio/port/');
-        setPortfolios(res.data);
-      } catch (err) {
-        console.error('Error fetching portfolios:', err);
-      }
-    };
-    fetchPortfolios();
+    fetchPortfolios(); // Fetch first page on mount
   }, []);
 
   return (
@@ -25,7 +34,7 @@ export default function Portfolio() {
           key={index}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: index * 0.1 }}
+          transition={{ duration: 0.4, delay: index * 0.05 }}
           className="w-[340px] bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl p-6 relative overflow-hidden text-white"
         >
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#6366f1]/20 via-transparent to-[#ec4899]/20 blur-[2px] pointer-events-none" />
@@ -57,6 +66,17 @@ export default function Portfolio() {
           </div>
         </motion.div>
       ))}
+
+      {/* Load More */}
+      {nextPageUrl && !loading && (
+        <button
+          onClick={fetchPortfolios}
+          className="w-full max-w-xs mt-8 bg-white/10 hover:bg-white/20 text-white py-2 rounded-xl"
+        >
+          Load More
+        </button>
+      )}
+      {loading && <p className="text-white mt-4">Loading...</p>}
     </div>
   );
 }
