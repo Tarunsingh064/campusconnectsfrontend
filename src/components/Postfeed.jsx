@@ -1,337 +1,87 @@
 'use client';
-
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 import Cookies from 'js-cookie';
-import { formatDistanceToNow } from 'date-fns';
-import { motion } from 'framer-motion';
 import { useAuth } from '@/Authcontext/Authcontext';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
 
-const PostsFeed = () => {
-  const [posts, setPosts] = useState([]);
-  const [text, setText] = useState('');
-  const [media, setMedia] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [showCreate, setShowCreate] = useState(false);
-  const feedRef = useRef();
+export default function PortfolioSection() {
   const { user } = useAuth();
+  const [bio, setBio] = useState(null);
 
   useEffect(() => {
-    if (feedRef.current) feedRef.current.scrollTop = 0;
-  }, [posts]);
-
-  const fetchPosts = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/');
-      const data = await res.json();
-      setPosts(data);
-    } catch (error) {
-      console.error('Failed to fetch posts:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreate = async () => {
-    if (!text.trim() && !media) {
-      alert('Please add some text or media to post.');
-      return;
-    }
-
-    setLoading(true);
-    const formData = new FormData();
-    formData.append('text', text);
-    if (media) formData.append('media', media);
-
-    try {
-      const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${Cookies.get('access_token')}`,
-        },
-        body: formData,
-      });
-
-      if (res.ok) {
-        const newPost = await res.json();
-        setPosts([newPost, ...posts]);
-        setText('');
-        setMedia(null);
-        setShowCreate(false);
-      } else {
-        const errData = await res.json();
-        console.error('Failed to create post:', errData);
-        alert('Post failed');
-      }
-    } catch (error) {
-      console.error('Error creating post:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    setLoading(true);
-    try {
-      const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${id}/`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${Cookies.get('access_token')}`,
-        },
-      });
-      if (res.ok) {
-        setPosts((prev) => prev.filter((post) => post.id !== id));
-      } else {
-        console.error('Delete failed');
-      }
-    } catch (error) {
-      console.error('Error deleting post:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEdit = async (id, newText) => {
-    if (!newText.trim()) {
-      alert('Text cannot be empty.');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('text', newText);
-
-    try {
-      const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${id}/`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${Cookies.get('access_token')}`,
-        },
-        body: formData,
-      });
-
-      if (res.ok) {
-        const updatedPost = await res.json();
-        setPosts((prev) => prev.map((post) => (post.id === id ? updatedPost : post)));
-      } else {
-        console.error('Edit failed', await res.json());
-        alert('Edit failed');
-      }
-    } catch (error) {
-      console.error('Error editing post:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  const PostCard = ({ post }) => {
-    const isOwner = user?.username === post.owner_username;
-    const isImage = post.media?.match(/\.(jpeg|jpg|png|webp)$/);
-    const isVideo = post.media?.match(/\.(mp4|webm)$/);
-
-    const handleEditClick = () => {
-      const newText = prompt('Edit your post:', post.text);
-      if (newText && newText !== post.text) {
-        handleEdit(post.id, newText);
+    const fetchBio = async () => {
+      try {
+        const res = await axios.get('https://campusconnect-ki0p.onrender.com/api/userbio/portfolio/', {
+          headers: {
+            Authorization: `Bearer ${Cookies.get('access_token')}`,
+          },
+        });
+        setBio(res.data);
+      } catch (err) {
+        console.error('Error loading bio:', err);
       }
     };
 
-    const handleDeleteClick = () => {
-      if (confirm('Are you sure you want to delete this post?')) {
-        handleDelete(post.id);
-      }
-    };
+    if (user?.username) fetchBio();
+  }, [user]);
 
-    return (
+  const profilePicUrl = bio?.media || '/placeholder-user.png'; // Cloudinary URL or fallback
+
+  return (
+    <div className="h-screen flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-4 border border-white/20"
+        transition={{ duration: 0.5 }}
+        className="w-[400px] h-[80vh] bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl p-6 relative overflow-hidden"
       >
-        <div className="flex gap-3">
-          <div className="flex-shrink-0">
-            <div className="w-10 h-10 bg-purple-500/30 rounded-full overflow-hidden flex items-center justify-center">
-              <img
-                src={`https://ui-avatars.com/api/?name=${post.owner_username}&background=7e22ce&color=fff`}
-                alt="avatar"
-                className="w-full h-full object-cover"
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#6366f1]/20 via-transparent to-[#ec4899]/20 blur-[2px] pointer-events-none" />
+
+        <div className="relative z-10 space-y-4 h-full overflow-y-auto custom-scroll text-white">
+          {/* Username and Profile Image */}
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-semibold break-words">{user?.username}</h2>
+            <p className="text-sm text-gray-400">User Portfolio</p>
+          </div>
+
+          <div className="flex justify-center">
+            <div className="w-24 h-24 relative rounded-full overflow-hidden border-4 border-[#6366f1] shadow-md">
+              <Image
+                src={profilePicUrl}
+                alt="Profile Image"
+                fill
+                className="object-cover"
               />
             </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h2 className="font-semibold text-white">{post.owner_username}</h2>
-              <span className="text-gray-300">·</span>
-              <p className="text-xs text-gray-300">
-                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-              </p>
-            </div>
 
-            <p className="text-gray-100 mt-1 mb-2 whitespace-pre-wrap">
-              {post.text}
-            </p>
-
-            {post.media && (
-              <div className="rounded-lg overflow-hidden mt-2 mb-2 max-h-48 bg-black/20 flex items-center justify-center">
-                {isImage ? (
-                  <img 
-                    src={post.media} 
-                    alt="Post media" 
-                    className="max-w-full max-h-full object-contain rounded-lg" 
-                  />
-                ) : isVideo ? (
-                  <video 
-                    controls 
-                    className="max-w-full max-h-48 object-contain rounded-lg"
-                  >
-                    <source src={post.media} />
-                  </video>
-                ) : (
-                  <p className="text-xs text-gray-400">Unsupported media</p>
-                )}
-              </div>
-            )}
-
-            {isOwner && (
-              <div className="flex gap-4 mt-3 text-sm">
-                <button
-                  onClick={handleEditClick}
-                  className="text-purple-300 hover:text-white transition"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={handleDeleteClick}
-                  className="text-red-400 hover:text-red-300 transition"
-                >
-                  Delete
-                </button>
-              </div>
-            )}
+          {/* Bio Data */}
+          <div className="space-y-3 text-sm">
+            <InfoRow label="Email" value={user?.email} />
+            <InfoRow label="Bio" value={bio?.bio} scrollable />
+            <InfoRow label="College" value={bio?.college_name} />
+            <InfoRow label="Year" value={bio?.college_year} />
+            <InfoRow label="Location" value={bio?.location} />
           </div>
         </div>
       </motion.div>
-    );
-  };
-
-  return (
-    <div className="flex flex-col h-full">
-      {/* Header with Refresh and Create Post */}
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-900/50 to-indigo-900/50 backdrop-blur-md p-4 flex items-center justify-between border-b border-white/10 mb-4">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={fetchPosts}
-            className="p-2 rounded-full hover:bg-white/10 transition"
-            title="Refresh"
-            disabled={loading}
-          >
-            {loading ? (
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-              </svg>
-            )}
-          </button>
-          <button
-            onClick={() => setShowCreate(!showCreate)}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-full text-sm font-medium transition"
-          >
-            {showCreate ? 'Cancel' : 'New Post'}
-          </button>
-        </div>
-      </div>
-
-      {/* Create Post Form */}
-      {showCreate && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          className="overflow-hidden mb-4"
-        >
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="What's on your mind?"
-              className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-gray-300 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              rows="3"
-            />
-            <div className="flex justify-between items-center mt-3">
-              <div>
-                <input
-                  type="file"
-                  accept="image/*,video/*"
-                  onChange={(e) => setMedia(e.target.files[0])}
-                  className="hidden"
-                  id="media-upload"
-                />
-                <label
-                  htmlFor="media-upload"
-                  className="p-2 rounded-full hover:bg-white/10 transition cursor-pointer text-white"
-                  title="Add media"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                  </svg>
-                </label>
-                {media && (
-                  <span className="ml-2 text-sm text-gray-300">
-                    {media.name}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={handleCreate}
-                disabled={loading || (!text.trim() && !media)}
-                className={`px-4 py-2 rounded-full font-medium ${(!text.trim() && !media) || loading ? 'bg-purple-800 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'} text-white transition`}
-              >
-                {loading ? 'Posting...' : 'Post'}
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Posts Feed with Fixed Height */}
-      <div 
-        ref={feedRef} 
-        className="flex-1 overflow-y-auto pr-2"
-        style={{ 
-          scrollbarWidth: 'thin',
-          height: '600px',
-          maxHeight: '600px'
-        }}
-      >
-        {posts.length === 0 && !loading ? (
-          <div className="flex flex-col items-center justify-center py-10 text-gray-300 h-full">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            <p className="text-center">No posts yet. Be the first to share something!</p>
-            <button
-              onClick={() => setShowCreate(true)}
-              className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition text-sm"
-            >
-              Create a post
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
-};
+}
 
-export default PostsFeed;
+function InfoRow({ label, value, scrollable = false }) {
+  return (
+    <div className="flex flex-col border-b border-white/10 pb-2">
+      <span className="text-gray-400 text-xs mb-1">{label}</span>
+      {scrollable ? (
+        <div className="max-h-24 overflow-y-auto text-xs p-2 bg-white/5 rounded-md whitespace-pre-wrap break-words custom-scroll">
+          {value || '—'}
+        </div>
+      ) : (
+        <span className="text-sm font-medium text-white break-words overflow-hidden">{value || '—'}</span>
+      )}
+    </div>
+  );
+}
