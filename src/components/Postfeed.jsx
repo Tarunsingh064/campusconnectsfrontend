@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Cookies from 'js-cookie';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -10,6 +10,14 @@ const PostsFeed = () => {
   const [text, setText] = useState('');
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
+  const feedRef = useRef();
+
+  // Scroll to top on new post
+  useEffect(() => {
+    if (feedRef.current) {
+      feedRef.current.scrollTop = 0;
+    }
+  }, [posts]);
 
   // Fetch all posts
   const fetchPosts = async () => {
@@ -130,7 +138,9 @@ const PostsFeed = () => {
         className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-md space-y-3"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full overflow-hidden">
+            <img src={`https://ui-avatars.com/api/?name=${post.owner.username}`} alt="avatar" className="w-full h-full object-cover" />
+          </div>
           <div>
             <h2 className="font-semibold text-gray-900 dark:text-white">{post.owner.username}</h2>
             <p className="text-xs text-gray-500">
@@ -205,7 +215,7 @@ const PostsFeed = () => {
       </div>
 
       {/* All Posts */}
-      <div className="grid gap-4">
+      <div ref={feedRef} className="grid gap-4 max-h-[70vh] overflow-y-auto pr-2">
         {posts.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}
