@@ -174,17 +174,17 @@ const PostsFeed = () => {
             </p>
 
             {post.media && (
-              <div className="rounded-lg overflow-hidden mt-2 mb-2">
+              <div className="rounded-lg overflow-hidden mt-2 mb-2 max-h-48 bg-black/20 flex items-center justify-center">
                 {isImage ? (
                   <img 
                     src={post.media} 
                     alt="Post media" 
-                    className="w-full h-48 object-cover rounded-lg border border-white/10" 
+                    className="max-w-full max-h-full object-contain rounded-lg" 
                   />
                 ) : isVideo ? (
                   <video 
                     controls 
-                    className="w-full h-48 object-cover rounded-lg border border-white/10"
+                    className="max-w-full max-h-48 object-contain rounded-lg"
                   >
                     <source src={post.media} />
                   </video>
@@ -305,7 +305,7 @@ const PostsFeed = () => {
         className="flex-1 overflow-y-auto pr-2"
         style={{ 
           scrollbarWidth: 'thin',
-          height: '600px', // Fixed height to show exactly 3 posts
+          height: '600px',
           maxHeight: '600px'
         }}
       >
