@@ -91,25 +91,35 @@ const PostsFeed = () => {
   };
 
   const handleEdit = async (id, newText) => {
-    try {
-      const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${id}/`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${Cookies.get('access_token')}`,
-        },
-        body: JSON.stringify({ text: newText }),
-      });
-      if (res.ok) {
-        const updatedPost = await res.json();
-        setPosts((prev) => prev.map((post) => (post.id === id ? updatedPost : post)));
-      } else {
-        console.error('Edit failed');
-      }
-    } catch (error) {
-      console.error('Error editing post:', error);
+  if (!newText.trim()) {
+    alert('Text cannot be empty.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('text', newText); // Only updating text
+
+  try {
+    const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${id}/`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${Cookies.get('access_token')}`,
+      },
+      body: formData,
+    });
+
+    if (res.ok) {
+      const updatedPost = await res.json();
+      setPosts((prev) => prev.map((post) => (post.id === id ? updatedPost : post)));
+    } else {
+      console.error('Edit failed', await res.json());
+      alert('Edit failed');
     }
-  };
+  } catch (error) {
+    console.error('Error editing post:', error);
+  }
+};
+
 
   useEffect(() => {
     fetchPosts();
