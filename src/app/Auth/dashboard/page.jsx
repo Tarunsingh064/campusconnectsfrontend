@@ -101,15 +101,16 @@ export default function Page() {
 
         {/* Middle Content */}
         <main className="w-full lg:w-2/4 p-6 lg:p-10">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="border-2 border-dashed border-gray-500 rounded-2xl p-10 text-center text-gray-300 text-base"
-          >
-            <PostsFeed/>
-          </motion.div>
-        </main>
+  <motion.div
+    initial={{ opacity: 0, y: 40 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.6 }}
+    className="p-2 sm:p-4 lg:p-6" // Add padding but remove border
+  >
+    <PostsFeed />
+  </motion.div>
+</main>
+
 
         {/* Right Sidebar */}
         <aside className="hidden lg:block lg:w-1/4 p-6 space-y-8 bg-white/10 backdrop-blur-sm text-white shadow-inner rounded-tl-3xl rounded-bl-3xl">
