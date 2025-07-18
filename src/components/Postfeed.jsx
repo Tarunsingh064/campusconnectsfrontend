@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { formatDistanceToNow } from 'date-fns';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/Authcontext/Authcontext';
 import { motion } from 'framer-motion';
 
 const PostsFeed = () => {
