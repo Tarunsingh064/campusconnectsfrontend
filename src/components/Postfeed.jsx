@@ -53,6 +53,7 @@ export default function PortfolioSection() {
                 alt="Profile Image"
                 fill
                 className="object-cover"
+                unoptimized
               />
             </div>
           </div>
