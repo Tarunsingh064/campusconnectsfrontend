@@ -8,53 +8,59 @@ const PostsFeed = () => {
   const [posts, setPosts] = useState([]);
   const [text, setText] = useState('');
   const [media, setMedia] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // Fetch all posts
   const fetchPosts = async () => {
+    setLoading(true);
     try {
       const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/');
       const data = await res.json();
       setPosts(data);
     } catch (error) {
       console.error('Failed to fetch posts:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   // Create new post
   const handleCreate = async () => {
-  const formData = new FormData();
-  formData.append('text', text);
-  if (media) formData.append('media', media);
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('text', text);
+    if (media) formData.append('media', media);
 
-  try {
-    const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${Cookies.get('access_token')}`,
-        // ⚠️ DO NOT set 'Content-Type' for FormData — browser will handle it
-      },
-      body: formData,
-    });
+    try {
+      const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${Cookies.get('access_token')}`,
+        },
+        body: formData,
+      });
 
-    if (res.ok) {
-      const newPost = await res.json();
-      setPosts([newPost, ...posts]);
-      setText('');
-      setMedia(null);
-    } else {
-      const errorData = await res.json().catch(() => ({})); // fallback if not JSON
-      console.error('Create post failed:', res.status, errorData);
-      alert(`Failed to create post: ${res.status}`);
+      if (res.ok) {
+        const newPost = await res.json();
+        setPosts([newPost, ...posts]);
+        setText('');
+        setMedia(null);
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        console.error('Create post failed:', res.status, errorData);
+        alert(`Failed to create post: ${res.status}`);
+      }
+    } catch (error) {
+      console.error('Error creating post:', error);
+      alert('Network error while creating post.');
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error creating post:', error);
-    alert('Network error while creating post.');
-  }
-};
-
+  };
 
   // Delete post
   const handleDelete = async (id) => {
+    setLoading(true);
     try {
       const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${id}/`, {
         method: 'DELETE',
@@ -69,6 +75,8 @@ const PostsFeed = () => {
       }
     } catch (error) {
       console.error('Error deleting post:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -98,7 +106,7 @@ const PostsFeed = () => {
     fetchPosts();
   }, []);
 
-  // PostCard component inside same file
+  // PostCard component
   const PostCard = ({ post }) => {
     const isImage = post.media?.endsWith('.jpg') || post.media?.endsWith('.png') || post.media?.endsWith('.jpeg') || post.media?.endsWith('.webp');
     const isVideo = post.media?.endsWith('.mp4') || post.media?.endsWith('.webm');
@@ -166,9 +174,24 @@ const PostsFeed = () => {
           onChange={(e) => setMedia(e.target.files[0])}
           className="mb-2"
         />
-        <button onClick={handleCreate} className="bg-blue-600 text-white px-4 py-2 rounded">
-          Post
+        <button
+          onClick={handleCreate}
+          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          disabled={loading}
+        >
+          {loading ? 'Posting...' : 'Post'}
         </button>
+      </div>
+
+      {/* Loader and Refresh */}
+      <div className="flex justify-between items-center px-4">
+        <button
+          onClick={fetchPosts}
+          className="bg-gray-200 dark:bg-gray-700 text-sm px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+        >
+          🔄 Refresh
+        </button>
+        {loading && <p className="text-blue-600 dark:text-blue-400">Loading...</p>}
       </div>
 
       {/* All Posts */}
