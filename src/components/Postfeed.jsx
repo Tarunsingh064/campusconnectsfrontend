@@ -113,7 +113,7 @@ const PostsFeed = () => {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
           <div>
-            <h2 className="font-semibold text-gray-900 dark:text-white">{post.owner.username}</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-white">{post.owner}</h2>
             <p className="text-xs text-gray-500">
               {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
             </p>
@@ -124,10 +124,10 @@ const PostsFeed = () => {
         {post.media && (
           <div className="rounded-lg overflow-hidden mt-2">
             {isImage ? (
-              <img src={post.media} alt="Post media" className="w-full h-auto rounded-md" />
+              <img src={media} alt="Post media" className="w-full h-auto rounded-md" />
             ) : isVideo ? (
               <video controls className="w-full rounded-md">
-                <source src={post.media} />
+                <source src={media} />
                 Your browser does not support the video tag.
               </video>
             ) : (
