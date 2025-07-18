@@ -100,13 +100,15 @@ export default function Page() {
         </aside>
 
         {/* Middle Content */}
-        <main className="w-full lg:w-2/4 p-6 lg:p-10">
+        <main className="w-full lg:w-2/4 px-4 sm:px-6 lg:px-8 py-4 space-y-4">
   <motion.div
     initial={{ opacity: 0, y: 40 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.6 }}
-    className="p-2 sm:p-4 lg:p-6" // Add padding but remove border
+    className="space-y-4"
   >
+    <RefreshButton />
+    <CreatePostForm />
     <PostsFeed />
   </motion.div>
 </main>
