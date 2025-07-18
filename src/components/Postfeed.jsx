@@ -4,14 +4,14 @@ import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/Authcontext/Authcontext'; // make sure this path is correct
+import { useAuth } from '@/context/AuthContext'; // ✅ import AuthContext
 
 const PostsFeed = () => {
-  const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [text, setText] = useState('');
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth(); // ✅ get logged-in user
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -133,13 +133,14 @@ const PostsFeed = () => {
           </div>
           <div>
             <h2 className="font-semibold text-gray-900 dark:text-white">
-              {post.owner?.username}
+              {post.owner?.username === user?.username ? 'You' : post.owner?.username}
             </h2>
             <p className="text-xs text-gray-500">
               {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
             </p>
           </div>
         </div>
+
         <p className="text-sm text-gray-800 dark:text-gray-100 whitespace-pre-wrap">{post.text}</p>
 
         {post.media && (
@@ -157,14 +158,12 @@ const PostsFeed = () => {
           </div>
         )}
 
-        <div className="flex gap-2 text-sm">
-          {user?.username === post.owner?.username && (
-            <>
-              <button onClick={handleEditClick} className="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600">Edit</button>
-              <button onClick={handleDeleteClick} className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600">Delete</button>
-            </>
-          )}
-        </div>
+        {post.owner?.username === user?.username && (
+          <div className="flex gap-2 text-sm">
+            <button onClick={handleEditClick} className="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600">Edit</button>
+            <button onClick={handleDeleteClick} className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600">Delete</button>
+          </div>
+        )}
       </motion.div>
     );
   };
@@ -174,7 +173,7 @@ const PostsFeed = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="space-y-6"
+      className="space-y-6 max-h-[85vh] overflow-y-auto pr-2"
     >
       {/* Refresh */}
       <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl shadow">
@@ -210,8 +209,8 @@ const PostsFeed = () => {
         </button>
       </div>
 
-      {/* All Posts Feed Scrollable */}
-      <div className="grid gap-4 max-h-[75vh] overflow-y-auto pr-2">
+      {/* All Posts */}
+      <div className="grid gap-4">
         {posts.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}
