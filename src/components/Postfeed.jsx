@@ -139,10 +139,10 @@ const PostsFeed = () => {
       >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full overflow-hidden">
-            <img src={`https://ui-avatars.com/api/?name=${post.owner.username}`} alt="avatar" className="w-full h-full object-cover" />
+            <img src={`https://ui-avatars.com/api/?name=${post.owner_username}`} alt="avatar" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h2 className="font-semibold text-gray-900 dark:text-white">{post.owner.username}</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-white">{post.owner_username}</h2>
             <p className="text-xs text-gray-500">
               {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
             </p>
