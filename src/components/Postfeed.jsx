@@ -3,13 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { formatDistanceToNow } from 'date-fns';
-import { useAuth } from '@/Authcontext/Authcontext';
 
 const PostsFeed = () => {
   const [posts, setPosts] = useState([]);
   const [text, setText] = useState('');
   const [media, setMedia] = useState(null);
-  const {user} = useAuth
 
   // Fetch all posts
   const fetchPosts = async () => {
@@ -115,7 +113,7 @@ const PostsFeed = () => {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
           <div>
-            <h2 className="font-semibold text-gray-900 dark:text-white">{post.user.username}</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-white">{post.owner.username}</h2>
             <p className="text-xs text-gray-500">
               {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
             </p>
