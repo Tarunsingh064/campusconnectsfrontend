@@ -27,6 +27,9 @@ export default function PortfolioSection() {
     if (user?.username) fetchBio();
   }, [user]);
 
+  // Use Cloudinary media if available, otherwise fallback
+  const profilePicUrl = bio?.media || '/placeholder-user.png';
+
   return (
     <div className="h-screen flex items-center justify-center p-4">
       <motion.div
@@ -47,7 +50,7 @@ export default function PortfolioSection() {
           <div className="flex justify-center">
             <div className="w-24 h-24 relative rounded-full overflow-hidden border-4 border-[#6366f1] shadow-md">
               <Image
-                src={user?.profileImage || '/placeholder-user.png'}
+                src={profilePicUrl}
                 alt="Profile Image"
                 fill
                 className="object-cover"
