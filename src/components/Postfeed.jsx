@@ -148,118 +148,183 @@ const PostsFeed = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-md space-y-3"
+        className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-4 border border-white/20"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-700 rounded-full overflow-hidden">
-            <img
-              src={`https://ui-avatars.com/api/?name=${post.owner_username}`}
-              alt="avatar"
-              className="w-full h-full object-cover"
-            />
+        <div className="flex gap-3">
+          <div className="flex-shrink-0">
+            <div className="w-10 h-10 bg-purple-500/30 rounded-full overflow-hidden flex items-center justify-center">
+              <img
+                src={`https://ui-avatars.com/api/?name=${post.owner_username}&background=7e22ce&color=fff`}
+                alt="avatar"
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
-          <div>
-            <h2 className="font-semibold text-gray-900 dark:text-white">{post.owner_username}</h2>
-            <p className="text-xs text-gray-500">
-              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h2 className="font-semibold text-white">{post.owner_username}</h2>
+              <span className="text-gray-300">·</span>
+              <p className="text-xs text-gray-300">
+                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+              </p>
+            </div>
+
+            <p className="text-gray-100 mt-1 mb-2 whitespace-pre-wrap">
+              {post.text}
             </p>
-          </div>
-        </div>
 
-        <p className="text-base text-gray-800 dark:text-gray-100 whitespace-pre-wrap">{post.text}</p>
+            {post.media && (
+              <div className="rounded-lg overflow-hidden mt-2 mb-2">
+                {isImage ? (
+                  <img 
+                    src={post.media} 
+                    alt="Post media" 
+                    className="w-full h-auto rounded-lg border border-white/10" 
+                  />
+                ) : isVideo ? (
+                  <video 
+                    controls 
+                    className="w-full rounded-lg border border-white/10"
+                  >
+                    <source src={post.media} />
+                  </video>
+                ) : (
+                  <p className="text-xs text-gray-400">Unsupported media</p>
+                )}
+              </div>
+            )}
 
-        {post.media && (
-          <div className="rounded-lg overflow-hidden mt-2">
-            {isImage ? (
-              <img src={post.media} alt="Post media" className="w-full h-auto rounded-md" />
-            ) : isVideo ? (
-              <video controls className="w-full rounded-md">
-                <source src={post.media} />
-              </video>
-            ) : (
-              <p className="text-xs text-gray-400">Unsupported media</p>
+            {isOwner && (
+              <div className="flex gap-4 mt-3 text-sm">
+                <button
+                  onClick={handleEditClick}
+                  className="text-purple-300 hover:text-white transition"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={handleDeleteClick}
+                  className="text-red-400 hover:text-red-300 transition"
+                >
+                  Delete
+                </button>
+              </div>
             )}
           </div>
-        )}
-
-        {isOwner && (
-          <div className="flex gap-2 mt-2">
-            <button
-              onClick={handleEditClick}
-              className="bg-yellow-500 text-white px-4 py-1.5 rounded-lg hover:bg-yellow-600 transition"
-            >
-              ✏️ Edit
-            </button>
-            <button
-              onClick={handleDeleteClick}
-              className="bg-red-500 text-white px-4 py-1.5 rounded-lg hover:bg-red-600 transition"
-            >
-              🗑️ Delete
-            </button>
-          </div>
-        )}
+        </div>
       </motion.div>
     );
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="flex flex-col gap-6 max-h-screen overflow-hidden"
-    >
-      {/* Refresh Header */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl shadow-md p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <button
-          onClick={fetchPosts}
-          className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold px-4 py-2 rounded-lg hover:brightness-110 transition"
-        >
-          🔄 Refresh
-        </button>
-        {loading && <span className="text-blue-600 dark:text-blue-400 text-sm">Loading...</span>}
-      </div>
-
-      {/* Toggle Create Form */}
-      <button
-        onClick={() => setShowCreate(!showCreate)}
-        className="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 transition w-fit self-center"
-      >
-        {showCreate ? '❌ Cancel' : '➕ Share something'}
-      </button>
-
-      {/* Create Form */}
-      {showCreate && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-2xl shadow-lg p-6 space-y-4">
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="✍️ Share your thoughts..."
-            className="w-full h-28 p-3 rounded-lg border border-gray-300 dark:border-gray-700 resize-none text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-          />
-          <input
-            type="file"
-            accept="image/*,video/*"
-            onChange={(e) => setMedia(e.target.files[0])}
-            className="w-full text-sm text-gray-700 dark:text-gray-300"
-          />
+    <div className="flex flex-col h-full">
+      {/* Header with Refresh and Create Post */}
+      <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-900/50 to-indigo-900/50 backdrop-blur-md p-4 flex items-center justify-between border-b border-white/10 mb-4">
+        <div className="flex items-center space-x-4">
           <button
-            onClick={handleCreate}
+            onClick={fetchPosts}
+            className="p-2 rounded-full hover:bg-white/10 transition"
+            title="Refresh"
             disabled={loading}
-            className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
           >
-            {loading ? 'Posting...' : '🚀 Post'}
+            {loading ? (
+              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+              </svg>
+            )}
+          </button>
+          <button
+            onClick={() => setShowCreate(!showCreate)}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-full text-sm font-medium transition"
+          >
+            {showCreate ? 'Cancel' : 'New Post'}
           </button>
         </div>
+      </div>
+
+      {/* Create Post Form */}
+      {showCreate && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="overflow-hidden mb-4"
+        >
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="What's on your mind?"
+              className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-gray-300 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              rows="3"
+            />
+            <div className="flex justify-between items-center mt-3">
+              <div>
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={(e) => setMedia(e.target.files[0])}
+                  className="hidden"
+                  id="media-upload"
+                />
+                <label
+                  htmlFor="media-upload"
+                  className="p-2 rounded-full hover:bg-white/10 transition cursor-pointer text-white"
+                  title="Add media"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                  </svg>
+                </label>
+                {media && (
+                  <span className="ml-2 text-sm text-gray-300">
+                    {media.name}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={handleCreate}
+                disabled={loading || (!text.trim() && !media)}
+                className={`px-4 py-2 rounded-full font-medium ${(!text.trim() && !media) || loading ? 'bg-purple-800 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'} text-white transition`}
+              >
+                {loading ? 'Posting...' : 'Post'}
+              </button>
+            </div>
+          </div>
+        </motion.div>
       )}
 
       {/* Posts Feed */}
-      <div ref={feedRef} className="flex-1 overflow-y-auto pr-2 max-h-[65vh] grid gap-6">
-        {posts.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
+      <div 
+        ref={feedRef} 
+        className="flex-1 overflow-y-auto pr-2"
+        style={{ scrollbarWidth: 'thin' }}
+      >
+        {posts.length === 0 && !loading ? (
+          <div className="flex flex-col items-center justify-center py-10 text-gray-300">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <p className="text-center">No posts yet. Be the first to share something!</p>
+            <button
+              onClick={() => setShowCreate(true)}
+              className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition text-sm"
+            >
+              Create a post
+            </button>
+          </div>
+        ) : (
+          posts.map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))
+        )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
