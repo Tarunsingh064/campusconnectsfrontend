@@ -4,7 +4,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import useAuth from '@/Authcontext/Authcontext'; // adjust path as needed
+import {useAuth} from '@/Authcontext/Authcontext'; // adjust path as needed
 
 export default function Portfolio() {
   const [portfolios, setPortfolios] = useState([]);
