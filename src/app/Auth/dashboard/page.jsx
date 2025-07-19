@@ -7,10 +7,21 @@ import PostsFeed from '@/components/Postfeed';
 
 export default function Page() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('Feed'); // State to track selected tab
 
   const sidebarVariants = {
     hidden: { x: '-100%' },
     visible: { x: 0 },
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'Feed':
+        return <PostsFeed />;
+      // Future: case 'Teams': return <Teams />;
+      default:
+        return <p className="text-white">Select a section from the sidebar</p>;
+    }
   };
 
   return (
@@ -46,7 +57,15 @@ export default function Page() {
             <h2 className="text-2xl font-bold text-purple-400">DevConnect</h2>
 
             <ul className="space-y-4 text-base font-medium">
-              <li className="text-purple-300 hover:text-white transition">Feed</li>
+              <li
+                className={`cursor-pointer ${activeTab === 'Feed' ? 'text-purple-300' : 'hover:text-white'} transition`}
+                onClick={() => {
+                  setActiveTab('Feed');
+                  setSidebarOpen(false); // Close on mobile after selecting
+                }}
+              >
+                Feed
+              </li>
               <li className="hover:text-white transition">Find Teams</li>
               <li className="hover:text-white transition">Alumni Connect</li>
               <li className="hover:text-white transition">Messages</li>
@@ -77,7 +96,12 @@ export default function Page() {
           <h2 className="text-3xl font-bold text-purple-400">DevConnect</h2>
 
           <ul className="space-y-4 text-lg font-medium">
-            <li className="text-purple-300 hover:text-white transition">Feed</li>
+            <li
+              className={`cursor-pointer ${activeTab === 'Feed' ? 'text-purple-300' : 'hover:text-white'} transition`}
+              onClick={() => setActiveTab('Feed')}
+            >
+              Feed
+            </li>
             <li className="hover:text-white transition">Find Teams</li>
             <li className="hover:text-white transition">Alumni Connect</li>
             <li className="hover:text-white transition">Messages</li>
@@ -101,17 +125,15 @@ export default function Page() {
 
         {/* Middle Content */}
         <main className="w-full lg:w-2/4 px-4 sm:px-6 lg:px-8 py-4 space-y-4">
-  <motion.div
-    initial={{ opacity: 0, y: 40 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.6 }}
-    className="space-y-4"
-  >
-    
-    <PostsFeed />
-  </motion.div>
-</main>
-
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="space-y-4"
+          >
+            {renderContent()}
+          </motion.div>
+        </main>
 
         {/* Right Sidebar */}
         <aside className="hidden lg:block lg:w-1/4 p-6 space-y-8 bg-white/10 backdrop-blur-sm text-white shadow-inner rounded-tl-3xl rounded-bl-3xl">
