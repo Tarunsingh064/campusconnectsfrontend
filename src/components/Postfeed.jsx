@@ -145,6 +145,7 @@ const PostCard = ({ post }) => {
       commentsRef.current.scrollTop = commentsRef.current.scrollHeight;
     }
   }, [comments, showComments]);
+  
 
   const fetchComments = async () => {
     setLoadingComments(true);
@@ -224,6 +225,7 @@ const PostCard = ({ post }) => {
   } catch (error) {
     console.error('Failed to post comment:', error);
   }
+  
 };
   const handleEditComment = async (id, newText) => {
     if (!newText.trim()) return;
@@ -294,6 +296,10 @@ const PostCard = ({ post }) => {
     }
   };
 
+  const getAvatarLetters = (username) => {
+    if (!username) return 'US';
+    return username.slice(0, 1).toUpperCase();
+  };
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -454,13 +460,13 @@ const PostCard = ({ post }) => {
                           <div className="flex items-center gap-2">
                             <div className="w-6 h-6 bg-purple-500/30 rounded-full overflow-hidden flex-shrink-0">
                               <img
-                                src={`https://ui-avatars.com/api/?name=${username}&background=7e22ce&color=fff&size=64`}
+                                src={`https://ui-avatars.com/api/?name=${getAvatarLetters(comment.owner_username)}&background=7e22ce&color=fff&size=64`}
                                 alt="avatar"
                                 className="w-full h-full object-cover"
                               />
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-white">{username}</p>
+                              <p className="text-xs font-medium text-white">{comment.owner_username}</p>
                               <p className="text-xs text-gray-300">{comment.text}</p>
                             </div>
                           </div>
