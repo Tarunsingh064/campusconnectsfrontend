@@ -129,6 +129,134 @@ const PostsFeed = () => {
     const isOwner = user?.username === post.owner_username;
     const isImage = post.media?.match(/\.(jpeg|jpg|png|webp)$/);
     const isVideo = post.media?.match(/\.(mp4|webm)$/);
+    const [showComments, setShowComments] = useState(false);
+    const [comments, setComments] = useState([]);
+    const [commentText, setCommentText] = useState('');
+    const [isLiked, setIsLiked] = useState(false);
+    const [likeCount, setLikeCount] = useState(post.like_count || 0);
+    const [loadingComments, setLoadingComments] = useState(false);
+    const [loadingLike, setLoadingLike] = useState(false);
+    const commentsRef = useRef(null);
+
+    useEffect(() => {
+      if (showComments && commentsRef.current) {
+        commentsRef.current.scrollTop = commentsRef.current.scrollHeight;
+      }
+    }, [comments, showComments]);
+
+    const fetchComments = async () => {
+      setLoadingComments(true);
+      try {
+        const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/comments/?post=${post.id}`);
+        const data = await res.json();
+        setComments(data);
+      } catch (error) {
+        console.error('Failed to fetch comments:', error);
+      } finally {
+        setLoadingComments(false);
+      }
+    };
+
+    const handleLike = async () => {
+      setLoadingLike(true);
+      try {
+        const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/like/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${Cookies.get('access_token')}`,
+          },
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          setIsLiked(data.status === 'liked');
+          setLikeCount(prev => data.status === 'liked' ? prev + 1 : prev - 1);
+        }
+      } catch (error) {
+        console.error('Failed to like post:', error);
+      } finally {
+        setLoadingLike(false);
+      }
+    };
+
+    const handleCommentSubmit = async (e) => {
+      e.preventDefault();
+      if (!commentText.trim()) return;
+
+      try {
+        const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/comment/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${Cookies.get('access_token')}`,
+          },
+          body: JSON.stringify({ text: commentText }),
+        });
+
+        if (res.ok) {
+          const newComment = await res.json();
+          setComments([...comments, newComment]);
+          setCommentText('');
+          // Scroll to bottom after adding comment
+          if (commentsRef.current) {
+            commentsRef.current.scrollTop = commentsRef.current.scrollHeight;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to post comment:', error);
+      }
+    };
+
+    const handleEditComment = async (commentId, newText) => {
+      if (!newText.trim()) return;
+
+      try {
+        const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/comments/${commentId}/`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${Cookies.get('access_token')}`,
+          },
+          body: JSON.stringify({ text: newText }),
+        });
+
+        if (res.ok) {
+          const updatedComment = await res.json();
+          setComments(comments.map(comment => 
+            comment.id === commentId ? updatedComment : comment
+          ));
+        }
+      } catch (error) {
+        console.error('Failed to edit comment:', error);
+      }
+    };
+
+    const handleDeleteComment = async (commentId) => {
+      if (confirm('Are you sure you want to delete this comment?')) {
+        try {
+          const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/comments/${commentId}/`, {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${Cookies.get('access_token')}`,
+            },
+          });
+
+          if (res.ok) {
+            setComments(comments.filter(comment => comment.id !== commentId));
+          }
+        } catch (error) {
+          console.error('Failed to delete comment:', error);
+        }
+      }
+    };
+
+    const toggleComments = () => {
+      if (!showComments) {
+        fetchComments();
+      }
+      setShowComments(!showComments);
+    };
 
     const handleEditClick = () => {
       const newText = prompt('Edit your post:', post.text);
@@ -194,20 +322,153 @@ const PostsFeed = () => {
               </div>
             )}
 
-            {isOwner && (
-              <div className="flex gap-4 mt-3 text-sm">
-                <button
-                  onClick={handleEditClick}
-                  className="text-purple-300 hover:text-white transition"
+            {/* Like and Comment Actions */}
+            <div className="flex justify-between items-center mt-3">
+              <div className="flex gap-4">
+                <button 
+                  onClick={handleLike}
+                  disabled={loadingLike}
+                  className="flex items-center gap-1 text-sm text-gray-300 hover:text-white transition"
                 >
-                  Edit
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className={`h-5 w-5 ${isLiked ? 'text-red-500 fill-current' : 'text-gray-300'}`} 
+                    viewBox="0 0 20 20" 
+                    fill="none" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={isLiked ? 0 : 1.5} 
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+                    />
+                  </svg>
+                  <span>{likeCount}</span>
                 </button>
-                <button
-                  onClick={handleDeleteClick}
-                  className="text-red-400 hover:text-red-300 transition"
+                
+                <button 
+                  onClick={toggleComments}
+                  className="flex items-center gap-1 text-sm text-gray-300 hover:text-white transition"
                 >
-                  Delete
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-5 w-5" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={1.5} 
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" 
+                    />
+                  </svg>
+                  <span>{post.comment_count || 0}</span>
                 </button>
+              </div>
+
+              {isOwner && (
+                <div className="flex gap-4 text-sm">
+                  <button
+                    onClick={handleEditClick}
+                    className="text-purple-300 hover:text-white transition"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleDeleteClick}
+                    className="text-red-400 hover:text-red-300 transition"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Comments Section */}
+            {showComments && (
+              <div className="mt-4">
+                {/* Comment Form */}
+                <form onSubmit={handleCommentSubmit} className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Write a comment..."
+                    className="flex-1 bg-white/5 border border-white/20 rounded-full px-4 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  />
+                  <button 
+                    type="submit"
+                    disabled={!commentText.trim()}
+                    className="px-3 py-1 bg-purple-600 text-white rounded-full text-sm hover:bg-purple-700 transition disabled:bg-purple-800 disabled:cursor-not-allowed"
+                  >
+                    Post
+                  </button>
+                </form>
+
+                {/* Comments List */}
+                <div 
+                  ref={commentsRef}
+                  className="max-h-48 overflow-y-auto pr-2 space-y-3"
+                  style={{ scrollbarWidth: 'thin' }}
+                >
+                  {loadingComments ? (
+                    <div className="flex justify-center py-2">
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  ) : comments.length > 0 ? (
+                    comments.map(comment => (
+                      <div key={comment.id} className="bg-white/5 rounded-lg p-3">
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 bg-purple-500/30 rounded-full overflow-hidden flex-shrink-0">
+                              <img
+                                src={`https://ui-avatars.com/api/?name=${comment.owner_username}&background=7e22ce&color=fff&size=64`}
+                                alt="avatar"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-white">{comment.owner_username}</p>
+                              <p className="text-xs text-gray-300">{comment.text}</p>
+                            </div>
+                          </div>
+                          {user?.username === comment.owner_username && (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  const newText = prompt('Edit comment:', comment.text);
+                                  if (newText && newText !== comment.text) {
+                                    handleEditComment(comment.id, newText);
+                                  }
+                                }}
+                                className="text-xs text-purple-300 hover:text-white"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteComment(comment.id)}
+                                className="text-xs text-red-400 hover:text-red-300"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-sm text-gray-400 py-2">No comments yet</p>
+                  )}
+                </div>
               </div>
             )}
           </div>
