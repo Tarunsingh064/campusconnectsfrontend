@@ -177,28 +177,30 @@ const handleLike = async (postId) => {
     });
     
     if (res.ok) {
+      console.log( res.status)
       const result = await res.json();
       setPosts(prevPosts => 
-        prevPosts.map(post => 
-          post.id === postId
-            ? {
-                ...post,  // Preserve all existing fields
-                is_liked: result.status === 'liked',  // Exact API field name
-                like_count: Math.max(
-                  0,
-                  result.status === 'liked'
-                    ? like_count + 1
-                    : like_count - 1
-                )
-              }
-            : post
-        )
+        prevPosts.map(post => {
+          if (post.id === postId) {
+            // Strict status check
+            const newIsLiked = result.status === 'liked'; // Will be true only if exact match
+            const countChange = newIsLiked ? 1 : -1;
+            
+            return {
+              ...post,
+              is_liked: newIsLiked,
+              like_count: Math.max(0, post.like_count + countChange)
+            };
+          }
+          return post;
+        })
       );
     }
   } catch (error) {
     console.error('Error liking post:', error);
   }
 };
+
   const handleCommentSubmit = async (e) => {
   e.preventDefault();
   if (!commentText.trim()) return;
