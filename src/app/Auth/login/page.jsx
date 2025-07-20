@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/Authcontext/Authcontext';
+import PublicRoute from '@/components/PublicRoute'; // import the wrapper
+
 
 const LoginPage = () => {
   const router = useRouter();
@@ -43,6 +45,7 @@ const LoginPage = () => {
   };
 
   return (
+    <PublicRoute>
     <div className="min-h-screen bg-gradient-to-br from-[#0f051d] via-[#27125a] to-[#471f85] flex items-center justify-center px-4">
       <div className="w-full max-w-md p-8 rounded-2xl bg-white/10 backdrop-blur-2xl shadow-xl text-white transition-transform transform hover:scale-105 duration-300">
         <h2 className="text-3xl font-bold mb-6 text-center">Welcome Back</h2>
@@ -110,6 +113,7 @@ const LoginPage = () => {
         </div>
       </div>
     </div>
+    </PublicRoute>
   );
 };
 

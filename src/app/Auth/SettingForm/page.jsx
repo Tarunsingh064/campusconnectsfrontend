@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
+import PublicRoute from '@/components/PublicRoute'; // import the wrapper
 
 export default function SettingsForm() {
   const [form, setForm] = useState({
@@ -83,6 +84,7 @@ export default function SettingsForm() {
   };
 
   return (
+    <PublicRoute>
     <div className="w-full py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-[#0f0f0f] via-[#1a1a1a] to-black rounded-3xl shadow-2xl border border-zinc-800">
       <form
         onSubmit={handleSubmit}
@@ -138,5 +140,6 @@ export default function SettingsForm() {
         )}
       </form>
     </div>
+    </PublicRoute>
   );
 }
