@@ -147,7 +147,7 @@ const PostsFeed = () => {
     const fetchComments = async () => {
       setLoadingComments(true);
       try {
-        const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/comments/`);
+        const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/comments/?post=${post.id}`);
         const data = await res.json();
         setComments(data);
       } catch (error) {
@@ -208,11 +208,11 @@ const PostsFeed = () => {
       }
     };
 
-    const handleEditComment = async (commentId, newText) => {
+    const handleEditComment = async (id, newText) => {
       if (!newText.trim()) return;
 
       try {
-        const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/comments/${commentId}/`, {
+        const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/comments/${id}/`, {
           method: 'PUT',
           headers: {
            
@@ -224,7 +224,7 @@ const PostsFeed = () => {
         if (res.ok) {
           const updatedComment = await res.json();
           setComments(comments.map(comment => 
-            comment.id === commentId ? updatedComment : comment
+            comment.id === id ? updatedComment : comment
           ));
         }
       } catch (error) {
@@ -232,10 +232,10 @@ const PostsFeed = () => {
       }
     };
 
-    const handleDeleteComment = async (commentId) => {
+    const handleDeleteComment = async (id) => {
       if (confirm('Are you sure you want to delete this comment?')) {
         try {
-          const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/comments/${commentId}/`, {
+          const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/comments/${id}/`, {
             method: 'DELETE',
             headers: {
               Authorization: `Bearer ${Cookies.get('access_token')}`,
@@ -243,7 +243,7 @@ const PostsFeed = () => {
           });
 
           if (res.ok) {
-            setComments(comments.filter(comment => comment.id !== commentId));
+            setComments(comments.filter(comment => comment.id !== id));
           }
         } catch (error) {
           console.error('Failed to delete comment:', error);
