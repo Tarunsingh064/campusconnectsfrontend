@@ -187,8 +187,8 @@ const handleLike = async (postId) => {
                 like_count: Math.max(
                   0,
                   result.status === 'liked'
-                    ? post.like_count + 1
-                    : post.like_count - 1
+                    ? like_count + 1
+                    : like_count - 1
                 )
               }
             : post
