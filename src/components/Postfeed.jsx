@@ -167,37 +167,38 @@ const PostCard = ({ post }) => {
     }
   };
 
-  const handleLike = async (postId) => {
-    try {
-      const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${postId}/like/`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${Cookies.get('access_token')}`
-        }
-      });
-      
-      if (res.ok) {
-        const result = await res.json();
-        
-        setPosts(prevPosts => 
-          prevPosts.map(post => 
-            post.id === postId
-              ? {
-                  ...post,
-                  is_liked: result.is_liked,
-                  is_liked: result.status === 'liked',
-                  like_count: result.status === 'liked'
-                    ? post.like_count + 1
-                    : post.like_count - 1
-                }
-              : post
-          )
-        );
+const handleLike = async (postId) => {
+  try {
+    const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${postId}/like/`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${Cookies.get('access_token')}`
       }
-    } catch (error) {
-      console.error('Error liking post:', error);
+    });
+    
+    if (res.ok) {
+      const result = await res.json();
+      setPosts(prevPosts => 
+        prevPosts.map(post => {
+          if (post.id === postId) {
+            // Strict status check
+            const newIsLiked = result.status === 'liked'; // Will be true only if exact match
+            const countChange = newIsLiked ? 1 : -1;
+            
+            return {
+              ...post,
+              is_liked: newIsLiked,
+              like_count: Math.max(0, post.like_count + countChange)
+            };
+          }
+          return post;
+        })
+      );
     }
-  };
+  } catch (error) {
+    console.error('Error liking post:', error);
+  }
+};
 
   const handleCommentSubmit = async (e) => {
   e.preventDefault();
