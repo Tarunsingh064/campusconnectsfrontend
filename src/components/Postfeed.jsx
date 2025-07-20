@@ -177,6 +177,7 @@ const handleLike = async (postId) => {
     });
     
     if (res.ok) {
+      console.log( res.status)
       const result = await res.json();
       setPosts(prevPosts => 
         prevPosts.map(post => {
