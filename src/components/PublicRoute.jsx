@@ -1,19 +1,19 @@
 'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
+import { useAuth } from '@/Authcontext/Authcontext';
 
 const PublicRoute = ({ children }) => {
+  const { user } = useAuth();
   const router = useRouter();
-  const token = Cookies.get('access_token');
 
   useEffect(() => {
-    if (token) {
-      router.replace('/'); // Redirect to homepage or dashboard if logged in
+    if (user) {
+      router.replace('/'); // or redirect to /dashboard
     }
-  }, [token, router]);
+  }, [user, router]);
 
-  if (token) return null; // Prevent showing login while redirecting
+  if (user) return null; // Prevent flashing form during redirect
 
   return children;
 };
