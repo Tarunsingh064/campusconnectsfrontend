@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
+import PublicRoute from '@/components/PublicRoute'; // import the wrapper
 
 const SignupPage = () => {
   const router = useRouter();
@@ -49,6 +50,7 @@ const SignupPage = () => {
   };
 
   return (
+    <PublicRoute>
     <div className="min-h-screen bg-gradient-to-br from-[#2e026d] via-[#6c22bd] to-[#8b5cf6] flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md bg-white/10 backdrop-blur-2xl p-8 rounded-3xl shadow-2xl text-white transition-transform duration-300 hover:scale-[1.015] hover:shadow-purple-800/40">
         <h2 className="text-3xl font-bold text-center mb-6">Create Your Account</h2>
@@ -130,6 +132,7 @@ const SignupPage = () => {
         </div>
       </div>
     </div>
+    </PublicRoute>
   );
 };
 
