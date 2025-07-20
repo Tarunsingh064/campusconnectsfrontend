@@ -11,7 +11,6 @@ const PostsFeed = () => {
   const [text, setText] = useState('');
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [likedPosts, setLikedPosts] = useState({});
   const [showCreate, setShowCreate] = useState(false);
   const feedRef = useRef();
   const { user } = useAuth();
@@ -20,22 +19,12 @@ const PostsFeed = () => {
     if (feedRef.current) feedRef.current.scrollTop = 0;
   }, [posts]);
 
- const fetchPosts = async () => {
+  const fetchPosts = async () => {
     setLoading(true);
     try {
       const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/');
       const data = await res.json();
       setPosts(data);
-      
-      // Extract liked status from each post
-      const likedStatus = {};
-      data.forEach(post => {
-        likedStatus[post.id] = post.is_liked; // Assuming API returns this
-        // OR if your API doesn't have this field:
-        // likedStatus[post.id] = post.likes.some(like => like.user_id === user?.id);
-      });
-      setLikedPosts(likedStatus);
-      
     } catch (error) {
       console.error('Failed to fetch posts:', error);
     } finally {
@@ -80,8 +69,6 @@ const PostsFeed = () => {
       setLoading(false);
     }
   };
-
-
 
   const handleDelete = async (id) => {
     setLoading(true);
@@ -144,6 +131,7 @@ const PostCard = ({ post }) => {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
+  const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.like_count || 0);
   const [loadingComments, setLoadingComments] = useState(false);
   const [loadingLike, setLoadingLike] = useState(false);
@@ -151,7 +139,6 @@ const PostCard = ({ post }) => {
 
   // Enhanced ownership check
   const isOwner = user?.id === post.owner || user?.username === post.owner_username;
- const isLiked = likedPosts[post.id] || false;
 
   useEffect(() => {
     if (showComments && commentsRef.current) {
@@ -181,25 +168,29 @@ const PostCard = ({ post }) => {
   };
 
   const handleLike = async () => {
-      try {
-        const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/like/`, {
+    setLoadingLike(true);
+    try {
+      const res = await fetch(
+        `https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/like/`,
+        {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${Cookies.get('access_token')}`
           }
-        });
-        
-        if (res.ok) {
-          const result = await res.json();
-          setLikedPosts(prev => ({
-            ...prev,
-            [post.id]: result.status === 'liked'
-          }));
         }
-      } catch (error) {
-        console.error('Error liking post:', error);
+      );
+      
+      if (res.ok) {
+        const data = await res.json();
+        setIsLiked(data.status === 'liked');
+        setLikeCount(prev => data.status === 'liked' ? prev + 1 : prev - 1);
       }
-    };
+    } catch (error) {
+      console.error('Failed to like post:', error);
+    } finally {
+      setLoadingLike(false);
+    }
+  };
 
   const handleCommentSubmit = async (e) => {
   e.preventDefault();
@@ -384,7 +375,7 @@ const PostCard = ({ post }) => {
                     d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
                   />
                 </svg>
-                <span>{post.like_count}</span>
+                <span>{likeCount}</span>
               </button>
               
               <button 
