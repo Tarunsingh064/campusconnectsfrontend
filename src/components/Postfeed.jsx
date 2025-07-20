@@ -360,7 +360,7 @@ const PostCard = ({ post }) => {
           <div className="flex justify-between items-center mt-3">
             <div className="flex gap-4">
               <button 
-                onClick={handleLike}
+                 onClick={() => handleLike(post.id)}
                 disabled={loadingLike}
                 className="flex items-center gap-1 text-sm text-gray-300 hover:text-white transition"
               >
