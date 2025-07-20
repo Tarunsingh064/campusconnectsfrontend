@@ -192,35 +192,39 @@ const PostCard = ({ post }) => {
   };
 
   const handleCommentSubmit = async (e) => {
-    e.preventDefault();
-    if (!commentText.trim()) return;
+  e.preventDefault();
+  if (!commentText.trim()) return;
 
-    try {
-      const res = await fetch(
-        `https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/comment/`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${Cookies.get('access_token')}`
-          },
-          body: JSON.stringify({ text: commentText })
-        }
-      );
+  try {
+    const formData = new FormData();
+    formData.append('text', commentText); // Explicitly convert to string
 
-      if (res.ok) {
-        const newComment = await res.json();
-        setComments([...comments, newComment]);
-        setCommentText('');
-        if (commentsRef.current) {
-          commentsRef.current.scrollTop = commentsRef.current.scrollHeight;
-        }
+    const res = await fetch(
+      `https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/comment/`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${Cookies.get('access_token')}`
+        },
+        body: formData // Using FormData instead of JSON
       }
-    } catch (error) {
-      console.error('Failed to post comment:', error);
-    }
-  };
+    );
 
+    if (res.ok) {
+      const newComment = await res.json();
+      setComments([...comments, newComment]);
+      setCommentText('');
+      if (commentsRef.current) {
+        commentsRef.current.scrollTop = commentsRef.current.scrollHeight;
+      }
+    } else {
+      const errorData = await res.json();
+      console.error('Comment submission error:', errorData);
+    }
+  } catch (error) {
+    console.error('Failed to post comment:', error);
+  }
+};
   const handleEditComment = async (id, newText) => {
     if (!newText.trim()) return;
 
