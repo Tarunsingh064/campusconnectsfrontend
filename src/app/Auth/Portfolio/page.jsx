@@ -5,7 +5,6 @@ import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {useAuth} from '@/Authcontext/Authcontext'; // adjust path as needed
-import PublicRoute from '@/components/PublicRoute'; // import the wrapper
 
 export default function Portfolio() {
   const [portfolios, setPortfolios] = useState([]);
@@ -52,7 +51,7 @@ export default function Portfolio() {
   }
 
   return (
-    <PublicRoute>
+  
     <div className="min-h-screen bg-[#0f0f0f] py-10 px-4 flex flex-wrap gap-6 justify-center">
       {portfolios.map((bio, index) => (
         <motion.div
@@ -100,13 +99,13 @@ export default function Portfolio() {
       {loading && <p className="text-white mt-4">Loading...</p>}
     </div>
     
-</PublicRoute>
+
   );
 }
 
 function InfoRow({ label, value, scrollable = false }) {
   return (
-    <PublicRoute>
+
     <div className="flex flex-col border-b border-white/10 pb-2">
       <span className="text-gray-400 text-xs mb-1">{label}</span>
       {scrollable ? (
@@ -117,7 +116,7 @@ function InfoRow({ label, value, scrollable = false }) {
         <span className="text-sm font-medium text-white break-words overflow-hidden">{value || '—'}</span>
       )}
     </div>
-</PublicRoute>
+
 
   );
 }
