@@ -147,7 +147,7 @@ const PostsFeed = () => {
     const fetchComments = async () => {
       setLoadingComments(true);
       try {
-        const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/comments/?post=${post.id}`);
+        const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/comments/`);
         const data = await res.json();
         setComments(data);
       } catch (error) {
@@ -163,7 +163,7 @@ const PostsFeed = () => {
         const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/like/`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            
             Authorization: `Bearer ${Cookies.get('access_token')}`,
           },
         });
@@ -188,7 +188,7 @@ const PostsFeed = () => {
         const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/comment/`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+           
             Authorization: `Bearer ${Cookies.get('access_token')}`,
           },
           body: JSON.stringify({ text: commentText }),
@@ -215,7 +215,7 @@ const PostsFeed = () => {
         const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/comments/${commentId}/`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
+           
             Authorization: `Bearer ${Cookies.get('access_token')}`,
           },
           body: JSON.stringify({ text: newText }),
