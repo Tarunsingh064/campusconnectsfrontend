@@ -131,8 +131,6 @@ const PostCard = ({ post }) => {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(post.like_count || 0);
   const [loadingComments, setLoadingComments] = useState(false);
   const [loadingLike, setLoadingLike] = useState(false);
   const commentsRef = useRef(null);
@@ -167,28 +165,33 @@ const PostCard = ({ post }) => {
     }
   };
 
-  const handleLike = async () => {
-    setLoadingLike(true);
+  const handleLike = async (postId) => {
     try {
-      const res = await fetch(
-        `https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/like/`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${Cookies.get('access_token')}`
-          }
+      const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${postId}/like/`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${Cookies.get('access_token')}`
         }
-      );
+      });
       
       if (res.ok) {
-        const data = await res.json();
-        setIsLiked(data.status === 'liked');
-        setLikeCount(prev => data.status === 'liked' ? prev + 1 : prev - 1);
+        const result = await res.json();
+        setPosts(prevPosts => 
+          prevPosts.map(post => 
+            post.id === postId
+              ? {
+                  ...post,
+                  is_liked: result.status === 'liked',
+                  like_count: result.status === 'liked'
+                    ? post.like_count + 1
+                    : post.like_count - 1
+                }
+              : post
+          )
+        );
       }
     } catch (error) {
-      console.error('Failed to like post:', error);
-    } finally {
-      setLoadingLike(false);
+      console.error('Error liking post:', error);
     }
   };
 
@@ -363,7 +366,7 @@ const PostCard = ({ post }) => {
               >
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
-                  className={`h-5 w-5 ${isLiked ? 'text-red-500 fill-current' : 'text-gray-300'}`} 
+                  className={`h-5 w-5 ${post.is_liked ? 'text-red-500 fill-current' : 'text-gray-300'}`} 
                   viewBox="0 0 20 20" 
                   fill="none" 
                   stroke="currentColor"
@@ -371,11 +374,11 @@ const PostCard = ({ post }) => {
                   <path 
                     strokeLinecap="round" 
                     strokeLinejoin="round" 
-                    strokeWidth={isLiked ? 0 : 1.5} 
+                    strokeWidth={post.is_liked ? 0 : 1.5} 
                     d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
                   />
                 </svg>
-                <span>{likeCount}</span>
+                <span>{post.like_count}</span>
               </button>
               
               <button 
