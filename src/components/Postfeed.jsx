@@ -12,7 +12,6 @@ const PostsFeed = () => {
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
-  const [likedPosts, setLikedPosts] = useState({});
   const feedRef = useRef();
   const { user } = useAuth();
 
@@ -20,26 +19,18 @@ const PostsFeed = () => {
     if (feedRef.current) feedRef.current.scrollTop = 0;
   }, [posts]);
 
-const fetchPosts = async () => {
-  setLoading(true);
-  try {
-    const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/');
-    const data = await res.json();
-    setPosts(data);
-
-    // Check which posts are liked by current user
-    const liked = {};
-    data.forEach(post => {
-      liked[post.id] = post.likes?.some(like => like.user_id === user?.id);
-    });
-    setLikedPosts(liked);
-
-  } catch (error) {
-    console.error('Failed to fetch posts:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+  const fetchPosts = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/');
+      const data = await res.json();
+      setPosts(data);
+    } catch (error) {
+      console.error('Failed to fetch posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreate = async () => {
     if (!text.trim() && !media) {
@@ -177,7 +168,6 @@ const PostCard = ({ post }) => {
   };
 
   const handleLike = async () => {
-    const isLiked = likedPosts[post.id] || false;
     setLoadingLike(true);
     try {
       const res = await fetch(
@@ -192,10 +182,7 @@ const PostCard = ({ post }) => {
       
       if (res.ok) {
         const data = await res.json();
-        setLikedPosts(prev => ({
-          ...prev,
-          [post.id]: data.status === 'liked'
-        }));
+        setIsLiked(data.status === 'liked');
         setLikeCount(prev => data.status === 'liked' ? prev + 1 : prev - 1);
       }
     } catch (error) {
