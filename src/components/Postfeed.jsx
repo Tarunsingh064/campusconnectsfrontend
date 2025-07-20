@@ -11,6 +11,7 @@ const PostsFeed = () => {
   const [text, setText] = useState('');
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [likedPosts, setLikedPosts] = useState({});
   const [showCreate, setShowCreate] = useState(false);
   const feedRef = useRef();
   const { user } = useAuth();
@@ -52,23 +53,22 @@ const PostsFeed = () => {
         body: formData,
       });
 
-      if (res.ok) {
-        const newPost = await res.json();
-        setPosts([newPost, ...posts]);
-        setText('');
-        setMedia(null);
-        setShowCreate(false);
-      } else {
-        const errData = await res.json();
-        console.error('Failed to create post:', errData);
-        alert('Post failed');
-      }
+      // Extract liked status from each post
+      const likedStatus = {};
+      data.forEach(post => {
+        likedStatus[post.id] = post.is_liked_by_user; // Assuming API returns this
+        // OR if your API doesn't have this field:
+        // likedStatus[post.id] = post.likes.some(like => like.user_id === user?.id);
+      });
+      setLikedPosts(likedStatus);
+      
     } catch (error) {
-      console.error('Error creating post:', error);
+      console.error('Failed to fetch posts:', error);
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleDelete = async (id) => {
     setLoading(true);
@@ -131,7 +131,6 @@ const PostCard = ({ post }) => {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
-  const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.like_count || 0);
   const [loadingComments, setLoadingComments] = useState(false);
   const [loadingLike, setLoadingLike] = useState(false);
@@ -139,6 +138,7 @@ const PostCard = ({ post }) => {
 
   // Enhanced ownership check
   const isOwner = user?.id === post.owner || user?.username === post.owner_username;
+ const isLiked = likedPosts[post.id] || false;
 
   useEffect(() => {
     if (showComments && commentsRef.current) {
