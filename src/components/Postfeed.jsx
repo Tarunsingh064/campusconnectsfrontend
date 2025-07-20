@@ -147,7 +147,7 @@ const PostsFeed = () => {
     const fetchComments = async () => {
       setLoadingComments(true);
       try {
-        const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/${post.id}/comments/`);
+        const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/comments/`);
         const data = await res.json();
         setComments(data);
       } catch (error) {
