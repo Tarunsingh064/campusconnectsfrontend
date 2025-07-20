@@ -366,10 +366,11 @@ const PostCard = ({ post }) => {
               >
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
-                  className={`heart-icon ${post.is_liked ? 'liked' : ''}`}
+                  className={`h-5 w-5 ${post.is_liked ? 'text-red-500 fill-current' : 'text-gray-300'}`}
                   viewBox="0 0 20 20" 
-                  fill={post.is_liked ? 'currentColor' : 'none'}
+                  fill="none"
                   stroke="currentColor"
+                  strokeWidth={post.is_liked ? 0 : 1.5}
                 >
                   <path 
                     strokeLinecap="round" 
