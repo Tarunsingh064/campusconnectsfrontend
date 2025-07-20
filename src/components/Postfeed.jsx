@@ -24,6 +24,7 @@ const PostsFeed = () => {
     try {
       const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/');
       const data = await res.json();
+      console.log('API Response:', data); // Debug: Check if is_liked exists
       setPosts(data);
     } catch (error) {
       console.error('Failed to fetch posts:', error);
@@ -54,6 +55,7 @@ const PostsFeed = () => {
 
       if (res.ok) {
         const newPost = await res.json();
+        
         setPosts([newPost, ...posts]);
         setText('');
         setMedia(null);
@@ -176,11 +178,13 @@ const PostCard = ({ post }) => {
       
       if (res.ok) {
         const result = await res.json();
+        console.log('Like API Response:', result);
         setPosts(prevPosts => 
           prevPosts.map(post => 
             post.id === postId
               ? {
                   ...post,
+                  is_liked: result.is_liked,
                   is_liked: result.status === 'liked',
                   like_count: result.status === 'liked'
                     ? post.like_count + 1
