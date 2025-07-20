@@ -20,12 +20,22 @@ const PostsFeed = () => {
     if (feedRef.current) feedRef.current.scrollTop = 0;
   }, [posts]);
 
-  const fetchPosts = async () => {
+ const fetchPosts = async () => {
     setLoading(true);
     try {
       const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/');
       const data = await res.json();
       setPosts(data);
+      
+      // Extract liked status from each post
+      const likedStatus = {};
+      data.forEach(post => {
+        likedStatus[post.id] = post.is_liked; // Assuming API returns this
+        // OR if your API doesn't have this field:
+        // likedStatus[post.id] = post.likes.some(like => like.user_id === user?.id);
+      });
+      setLikedPosts(likedStatus);
+      
     } catch (error) {
       console.error('Failed to fetch posts:', error);
     } finally {
@@ -53,21 +63,24 @@ const PostsFeed = () => {
         body: formData,
       });
 
-      // Extract liked status from each post
-      const likedStatus = {};
-      data.forEach(post => {
-        likedStatus[post.id] = post.is_liked_by_user; // Assuming API returns this
-        // OR if your API doesn't have this field:
-        // likedStatus[post.id] = post.likes.some(like => like.user_id === user?.id);
-      });
-      setLikedPosts(likedStatus);
-      
+      if (res.ok) {
+        const newPost = await res.json();
+        setPosts([newPost, ...posts]);
+        setText('');
+        setMedia(null);
+        setShowCreate(false);
+      } else {
+        const errData = await res.json();
+        console.error('Failed to create post:', errData);
+        alert('Post failed');
+      }
     } catch (error) {
-      console.error('Failed to fetch posts:', error);
+      console.error('Error creating post:', error);
     } finally {
       setLoading(false);
     }
   };
+
 
 
   const handleDelete = async (id) => {
@@ -168,29 +181,25 @@ const PostCard = ({ post }) => {
   };
 
   const handleLike = async () => {
-    setLoadingLike(true);
-    try {
-      const res = await fetch(
-        `https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/like/`,
-        {
+      try {
+        const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/like/`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${Cookies.get('access_token')}`
           }
+        });
+        
+        if (res.ok) {
+          const result = await res.json();
+          setLikedPosts(prev => ({
+            ...prev,
+            [post.id]: result.status === 'liked'
+          }));
         }
-      );
-      
-      if (res.ok) {
-        const data = await res.json();
-        setIsLiked(data.status === 'liked');
-        setLikeCount(prev => data.status === 'liked' ? prev + 1 : prev - 1);
+      } catch (error) {
+        console.error('Error liking post:', error);
       }
-    } catch (error) {
-      console.error('Failed to like post:', error);
-    } finally {
-      setLoadingLike(false);
-    }
-  };
+    };
 
   const handleCommentSubmit = async (e) => {
   e.preventDefault();
@@ -375,7 +384,7 @@ const PostCard = ({ post }) => {
                     d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
                   />
                 </svg>
-                <span>{likeCount}</span>
+                <span>{post.like_count}</span>
               </button>
               
               <button 
