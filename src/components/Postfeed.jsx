@@ -173,8 +173,8 @@ const PostCard = ({ post }) => {
 
 const handleLike = async (postId) => {
   try {
-    const res = await axios.post(
-      `https://campusconnect-ki0p.onrender.com/api/post/posts/${postId}/like/`,
+    const response = await axios.post(
+      `${BASE_URL}/api/post/posts/${postId}/like/`,
       {},
       {
         headers: {
@@ -183,27 +183,26 @@ const handleLike = async (postId) => {
       }
     );
 
-    const status = res.data.status;
+    const updatedPosts = posts.map((post) => {
+      if (post.id === postId) {
+        const isLiked = response.data.status === "liked";
+        return {
+          ...post,
+          is_liked: isLiked,
+          like_count: post.like_count + (isLiked ? 1 : -1),
+        };
+      }
+      return post;
+    });
 
-    // Update the local post's is_liked and like_count
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              is_liked: status === "liked",
-              like_count:
-                post.like_count + (status === "liked" ? 1 : -1),
-            }
-          : post
-      )
-    );
-
-    console.log("✅ Like status:", status);
-  } catch (err) {
-    console.error("❌ Error liking post", err);
+    setPosts(updatedPosts);
+    console.log("✅ Like status:", response.data);
+    console.log("✅ post status:", updatedPosts);
+  } catch (error) {
+    console.error("❌ Error liking post", error);
   }
 };
+
 
 
 
