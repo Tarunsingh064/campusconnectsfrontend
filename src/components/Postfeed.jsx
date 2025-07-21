@@ -174,7 +174,7 @@ const PostCard = ({ post }) => {
 const handleLike = async (postId) => {
   try {
     const response = await axios.post(
-      `${BASE_URL}/api/post/posts/${postId}/like/`,
+      `https://campusconnect-ki0p.onrender.com/api/post/posts/${postId}/like/`,
       {},
       {
         headers: {
