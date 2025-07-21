@@ -184,6 +184,7 @@ const handleLike = async (postId) => {
 
     if (!response.ok) {
       const err = await response.text();
+      console.log('🧠 Backend response:', result);
       throw new Error('Failed to toggle like: ' + err);
     }
 
