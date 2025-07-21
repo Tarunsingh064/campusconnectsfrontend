@@ -170,10 +170,10 @@ const PostCard = ({ post }) => {
     }
   };
 
-const handleLike = async (postId) => {
+const handleLike = async (postId, isCurrentlyLiked) => {
   try {
     const formData = new FormData();
-    formData.append('status', 'liked');
+    formData.append('status', isCurrentlyLiked ? 'unliked' : 'liked'); // toggle logic
 
     const response = await fetch(
       `https://campusconnect-ki0p.onrender.com/api/post/posts/${postId}/like/`,
@@ -190,7 +190,7 @@ const handleLike = async (postId) => {
 
     const result = await response.json(); // { status: 'liked' } or { status: 'unliked' }
 
-    // Update posts state
+    // Update post list
     setPosts(prevPosts =>
       prevPosts.map(post => {
         if (post.id === postId) {
@@ -210,6 +210,7 @@ const handleLike = async (postId) => {
     console.error('Error liking post:', error);
   }
 };
+
 
 
   const handleCommentSubmit = async (e) => {
@@ -376,7 +377,7 @@ const handleLike = async (postId) => {
 
           <div className="flex justify-between items-center mt-3">
             <div className="flex gap-4">
-              <button onClick={() => handleLike(post.id)}>
+              <button onClick={() => handleLike(post.id,post.is_liked)}>
   {post.is_liked ? '💔 Unlike' : '❤️ Like'} ({post.like_count})
 </button>
               
