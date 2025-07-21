@@ -192,7 +192,7 @@ const PostCard = ({ post }) => {
         {
           method: 'POST',
           headers: {
-            'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
+            Authorization: `Bearer ${Cookies.get('access_token')}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ status: 'liked' }),
