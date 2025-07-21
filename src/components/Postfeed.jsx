@@ -172,24 +172,45 @@ const PostCard = ({ post }) => {
 
 const handleLike = async (postId) => {
   try {
+    const formData = new FormData();
+    formData.append('status', 'liked');
+
     const response = await fetch(
-      `https://campusconnect-kf0p.onrender.com/api/post/posts/${postId}/like/`,
+      `https://campusconnect-ki0p.onrender.com/api/post/posts/${postId}/like/`,
       {
         method: 'POST',
         headers: {
-            Authorization: `Bearer ${Cookies.get('access_token')}`
-          },
-        body: JSON.stringify({ status: 'liked' }), // As shown in your screenshot
+          Authorization: `Bearer ${Cookies.get('access_token')}`
+        },
+        body: formData
       }
     );
 
     if (!response.ok) throw new Error('Failed to toggle like');
-    const data = await response.json();
-    return data; // Returns success/updated like count
+
+    const result = await response.json(); // { status: 'liked' } or { status: 'unliked' }
+
+    // Update posts state
+    setPosts(prevPosts =>
+      prevPosts.map(post => {
+        if (post.id === postId) {
+          const newIsLiked = result.status === 'liked';
+          const countChange = newIsLiked ? 1 : -1;
+
+          return {
+            ...post,
+            is_liked: newIsLiked,
+            like_count: Math.max(0, post.like_count + countChange)
+          };
+        }
+        return post;
+      })
+    );
   } catch (error) {
     console.error('Error liking post:', error);
   }
 };
+
 
   const handleCommentSubmit = async (e) => {
   e.preventDefault();
@@ -355,28 +376,9 @@ const handleLike = async (postId) => {
 
           <div className="flex justify-between items-center mt-3">
             <div className="flex gap-4">
-              <button 
-                 onClick={() => handleLike(post.id)}
-                disabled={loadingLike}
-                className="flex items-center gap-1 text-sm text-gray-300 hover:text-white transition"
-              >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className={`h-5 w-5 ${post.is_liked ? 'text-red-500 fill-current' : 'text-gray-300'}`}
-                  viewBox="0 0 20 20" 
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={post.is_liked ? 0 : 1.5}
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                   
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
-                  />
-                </svg>
-                <span>{post.like_count}</span>
-              </button>
+              <button onClick={() => handleLike(post.id)}>
+  {post.is_liked ? '💔 Unlike' : '❤️ Like'} ({post.like_count})
+</button>
               
               <button 
                 onClick={toggleComments}
