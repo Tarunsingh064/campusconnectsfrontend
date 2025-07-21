@@ -183,33 +183,39 @@ const handleLike = async (postId) => {
     );
 
     if (!response.ok) {
-      const err = await response.text();
-      console.log('🧠 Backend response:', result);
-      throw new Error('Failed to toggle like: ' + err);
+      throw new Error('Failed to toggle like');
     }
 
-    const result = await response.json(); // { status: "liked" } or "unliked"
-    console.log('Like status:', result);
+    const result = await response.json(); // { status: "liked" | "unliked" }
+    console.log("✅ Like status:", result);
 
-    // Update post list
     setPosts(prevPosts =>
       prevPosts.map(post => {
         if (post.id === postId) {
+          const wasLiked = post.is_liked;
           const newIsLiked = result.status === 'liked';
-          const countChange = newIsLiked ? 1 : -1;
+          let newLikeCount = post.like_count;
+
+          if (wasLiked && !newIsLiked) {
+            newLikeCount = Math.max(0, post.like_count - 1);
+          } else if (!wasLiked && newIsLiked) {
+            newLikeCount = post.like_count + 1;
+          }
+
           return {
             ...post,
             is_liked: newIsLiked,
-            like_count: Math.max(0, post.like_count + countChange)
+            like_count: newLikeCount
           };
         }
         return post;
       })
     );
   } catch (error) {
-    console.error('Error toggling like:', error);
+    console.error('❌ Error toggling like:', error);
   }
 };
+
 
 
 
