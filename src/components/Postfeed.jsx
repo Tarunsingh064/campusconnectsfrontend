@@ -24,7 +24,7 @@ const PostsFeed = () => {
     try {
       const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/');
       const data = await res.json();
-      console.log("✅ Like status:", data);
+      console.log("✅ post status:", data);
       setPosts(data);
     } catch (error) {
       console.error('Failed to fetch posts:', error);
