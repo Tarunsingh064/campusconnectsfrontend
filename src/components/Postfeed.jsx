@@ -5,7 +5,8 @@ import Cookies from 'js-cookie';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/Authcontext/Authcontext';
-import { Heart, HeartOff } from 'lucide-react';
+import { HeartIcon as HeartOutlineIcon } from '@heroicons/react/24/outline';
+import { HeartIcon as HeartFilledIcon } from '@heroicons/react/24/solid';
 
 
 const PostsFeed = () => {
