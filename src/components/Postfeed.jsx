@@ -188,28 +188,20 @@ const handleLike = async (postId) => {
     console.log("✅ Like status:", result);
 
     // FIX: Update post based on result.status
-    setPosts(prevPosts =>
-      prevPosts.map(post => {
-        if (post.id === postId) {
-          if (result.status === 'liked') {
-            return {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId
+          ? {
               ...post,
-              is_liked: true,
-              like_count: post.like_count + 1,
-            };
-          } else if (result.status === 'unliked') {
-            return {
-              ...post,
-              is_liked: false,
-              like_count: Math.max(0, post.like_count - 1),
-            };
-          }
-        }
-        return post;
-      })
+              is_liked: status === "liked",
+              like_count:
+                post.like_count + (status === "liked" ? 1 : -1),
+            }
+          : post
+      )
     );
   } catch (error) {
-    console.error('Error toggling like:', error);
+    console.error("Error toggling like:", error);
   }
 };
 
@@ -380,32 +372,42 @@ const handleLike = async (postId) => {
           )}
 
           <div className="flex justify-between items-center mt-3">
-            <div className="flex gap-4">
-              <button onClick={() => handleLike(post.id)}>
-  {post.is_liked ? '💔 Unlike' : '❤️ Like'} ({post.like_count})
-</button>
-              
-              <button 
-                onClick={toggleComments}
-                className="flex items-center gap-1 text-sm text-gray-300 hover:text-white transition"
-              >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className="h-5 w-5" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={1.5} 
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" 
-                  />
-                </svg>
-                {/*<span>{post.comment_count || 0}</span>*/}
-              </button>
-            </div>
+             {/* Like button + count */}
+  <div className="flex items-center space-x-2">
+    {post.is_liked ? (
+      <button onClick={() => handleLike(post.id)} className="text-red-500">
+        <HeartFilledIcon className="w-6 h-6" />
+      </button>
+    ) : (
+      <button onClick={() => handleLike(post.id)} className="text-gray-500">
+        <HeartOutlineIcon className="w-6 h-6" />
+      </button>
+    )}
+    <span className="text-sm text-gray-300">{post.like_count}</span>
+  </div>
+
+  {/* Comment toggle button */}
+  <button 
+    onClick={toggleComments}
+    className="flex items-center gap-1 text-sm text-gray-300 hover:text-white transition"
+  >
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      className="h-5 w-5" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      stroke="currentColor"
+    >
+      <path 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        strokeWidth={1.5} 
+        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" 
+      />
+    </svg>
+    {/* Optional comment count */}
+    {/* <span>{post.comment_count || 0}</span> */}
+  </button>
 
             {isOwner && (
               <div className="flex gap-4 text-sm">
