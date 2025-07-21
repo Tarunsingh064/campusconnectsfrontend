@@ -170,25 +170,25 @@ const PostCard = ({ post }) => {
     }
   };
 
-const handleLike = async (postId, isCurrentlyLiked) => {
+const handleLike = async (postId) => {
   try {
-    const formData = new FormData();
-    formData.append('status', isCurrentlyLiked ? 'unliked' : 'liked'); // toggle logic
-
     const response = await fetch(
       `https://campusconnect-ki0p.onrender.com/api/post/posts/${postId}/like/`,
       {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${Cookies.get('access_token')}`
-        },
-        body: formData
+        }
       }
     );
 
-    if (!response.ok) throw new Error('Failed to toggle like');
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error('Failed to toggle like: ' + err);
+    }
 
-    const result = await response.json(); // { status: 'liked' } or { status: 'unliked' }
+    const result = await response.json(); // { status: "liked" } or "unliked"
+    console.log('Like status:', result);
 
     // Update post list
     setPosts(prevPosts =>
@@ -196,7 +196,6 @@ const handleLike = async (postId, isCurrentlyLiked) => {
         if (post.id === postId) {
           const newIsLiked = result.status === 'liked';
           const countChange = newIsLiked ? 1 : -1;
-
           return {
             ...post,
             is_liked: newIsLiked,
@@ -207,9 +206,10 @@ const handleLike = async (postId, isCurrentlyLiked) => {
       })
     );
   } catch (error) {
-    console.error('Error liking post:', error);
+    console.error('Error toggling like:', error);
   }
 };
+
 
 
 
@@ -377,7 +377,7 @@ const handleLike = async (postId, isCurrentlyLiked) => {
 
           <div className="flex justify-between items-center mt-3">
             <div className="flex gap-4">
-              <button onClick={() => handleLike(post.id,post.is_liked)}>
+              <button onClick={() => handleLike(post.id)}>
   {post.is_liked ? '💔 Unlike' : '❤️ Like'} ({post.like_count})
 </button>
               
