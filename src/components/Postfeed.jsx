@@ -177,42 +177,39 @@ const handleLike = async (postId) => {
       {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${Cookies.get('access_token')}`
-        }
+          Authorization: `Bearer ${Cookies.get('access_token')}`,
+        },
       }
     );
 
-    if (!response.ok) {
-      throw new Error('Failed to toggle like');
-    }
+    if (!response.ok) throw new Error('Failed to toggle like');
 
-    const result = await response.json(); // { status: "liked" | "unliked" }
+    const result = await response.json(); // { status: 'liked' | 'unliked' }
     console.log("✅ Like status:", result);
 
+    // FIX: Update post based on result.status
     setPosts(prevPosts =>
       prevPosts.map(post => {
         if (post.id === postId) {
-          const wasLiked = post.is_liked;
-          const newIsLiked = result.status === 'liked';
-          let newLikeCount = post.like_count;
-
-          if (wasLiked && !newIsLiked) {
-            newLikeCount = Math.max(0, post.like_count - 1);
-          } else if (!wasLiked && newIsLiked) {
-            newLikeCount = post.like_count + 1;
+          if (result.status === 'liked') {
+            return {
+              ...post,
+              is_liked: true,
+              like_count: post.like_count + 1,
+            };
+          } else if (result.status === 'unliked') {
+            return {
+              ...post,
+              is_liked: false,
+              like_count: Math.max(0, post.like_count - 1),
+            };
           }
-
-          return {
-            ...post,
-            is_liked: newIsLiked,
-            like_count: newLikeCount
-          };
         }
         return post;
       })
     );
   } catch (error) {
-    console.error('❌ Error toggling like:', error);
+    console.error('Error toggling like:', error);
   }
 };
 
