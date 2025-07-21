@@ -31,7 +31,10 @@ const PostsFeed = () => {
     } finally {
       setLoading(false);
     }
+    
   };
+
+   
 
   const handleCreate = async () => {
     if (!text.trim() && !media) {
@@ -169,33 +172,20 @@ const PostCard = ({ post }) => {
 
 const handleLike = async (postId) => {
   try {
-    const res = await fetch(`https://campusconnect-ki0p.onrender.com/api/post/posts/${postId}/like/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${Cookies.get('access_token')}`
+    const response = await fetch(
+      `https://campusconnect-kf0p.onrender.com/api/post/posts/${postId}/like/`,
+      {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${Cookies.get('access_token')}`
+          },
+        body: JSON.stringify({ status: 'liked' }), // As shown in your screenshot
       }
-    });
-    
-    if (res.ok) {
-      console.log( res.status)
-      const result = await res.json();
-      setPosts(prevPosts => 
-        prevPosts.map(post => {
-          if (post.id === postId) {
-            // Strict status check
-            const newIsLiked = result.status === 'liked'; // Will be true only if exact match
-            const countChange = newIsLiked ? 1 : -1;
-            
-            return {
-              ...post,
-              is_liked: newIsLiked,
-              like_count: Math.max(0, post.like_count + countChange)
-            };
-          }
-          return post;
-        })
-      );
-    }
+    );
+
+    if (!response.ok) throw new Error('Failed to toggle like');
+    const data = await response.json();
+    return data; // Returns success/updated like count
   } catch (error) {
     console.error('Error liking post:', error);
   }
