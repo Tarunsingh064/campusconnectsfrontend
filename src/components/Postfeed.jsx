@@ -382,7 +382,7 @@ const handleLike = async (postId) => {
           <div className="flex justify-between items-center mt-3">
             <div className="flex gap-4">
               <button onClick={() => handleLike(post.id)}>
-  {post.is_liked ? '💔 Unlike' : '❤️ Like'} ({post.like_count})
+  {post.is_liked ? '❤️ like' : ' 💔 Like'} ({post.like_count})
 </button>
               
               <button 
