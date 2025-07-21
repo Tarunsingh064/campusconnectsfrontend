@@ -172,22 +172,19 @@ const PostCard = ({ post }) => {
 
 const handleLike = async (postId) => {
   try {
-    const response = await fetch(
+    const res = await axios.post(
       `https://campusconnect-ki0p.onrender.com/api/post/posts/${postId}/like/`,
+      {},
       {
-        method: 'POST',
         headers: {
-          Authorization: `Bearer ${Cookies.get('access_token')}`,
+          Authorization: `Bearer ${Cookies.get("access_token")}`,
         },
       }
     );
 
-    if (!response.ok) throw new Error('Failed to toggle like');
+    const status = res.data.status;
 
-    const result = await response.json(); // { status: 'liked' | 'unliked' }
-    console.log("✅ Like status:", result);
-
-    // FIX: Update post based on result.status
+    // Update the local post's is_liked and like_count
     setPosts((prevPosts) =>
       prevPosts.map((post) =>
         post.id === postId
@@ -200,8 +197,10 @@ const handleLike = async (postId) => {
           : post
       )
     );
-  } catch (error) {
-    console.error("Error toggling like:", error);
+
+    console.log("✅ Like status:", status);
+  } catch (err) {
+    console.error("❌ Error liking post", err);
   }
 };
 
@@ -373,9 +372,16 @@ const handleLike = async (postId) => {
 
           <div className="flex justify-between items-center mt-3">
             <div className="flex gap-4">
-              <button onClick={() => handleLike(post.id)}>
-  {post.is_liked ? '💔 Unlike' : '❤️ Like'} ({post.like_count})
-</button>
+
+              {post.is_liked ? (
+  <button onClick={() => handleLike(post.id)} className="text-red-500">
+    ❤️ {post.like_count}
+  </button>
+) : (
+  <button onClick={() => handleLike(post.id)} className="text-gray-400">
+    🤍 {post.like_count}
+  </button>
+)}
               
               <button 
                 onClick={toggleComments}
