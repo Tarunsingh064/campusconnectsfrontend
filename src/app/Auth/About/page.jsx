@@ -138,7 +138,8 @@ export default function AboutPage() {
   // --- Render Page with Fetched Data ---
   return (
     <div className="bg-gray-900 text-white min-h-screen font-sans">
-      {/* --- Navigation --- */}
+        {/*
+      
       <nav className="sticky top-0 z-50 bg-gray-900/80 backdrop-blur-lg border-b border-gray-800">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
@@ -160,6 +161,7 @@ export default function AboutPage() {
           </button>
         </div>
       </nav>
+      */}
 
       <main className="container mx-auto px-6 py-16 md:py-24">
         {/* --- Hero Section --- */}
