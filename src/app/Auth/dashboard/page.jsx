@@ -9,6 +9,7 @@ export default function Page() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('Feed'); // State to track selected tab
 
+
   const sidebarVariants = {
     hidden: { x: '-100%' },
     visible: { x: 0 },
