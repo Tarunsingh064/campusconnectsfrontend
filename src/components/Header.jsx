@@ -33,7 +33,7 @@ export default function Header() {
             <Link href="/Auth/Portfolio" className="text-gray-400 hover:text-white transition">
               Portfolio
             </Link>
-            <Link href="/about" className="text-gray-400 hover:text-white transition">
+            <Link href="/Auth/About" className="text-gray-400 hover:text-white transition">
               About
             </Link>
           </div>
@@ -112,7 +112,7 @@ export default function Header() {
         <div className="md:hidden mt-4 flex flex-col gap-4">
           <Link href="/" className="text-white hover:text-cyan-400">Home</Link>
           <Link href="/Auth/Portfolio" className="text-white hover:text-cyan-400">Portfolio</Link>
-          <Link href="/about" className="text-white hover:text-cyan-400">About</Link>
+          <Link href="/Auth/About" className="text-white hover:text-cyan-400">About</Link>
 
           {user ? (
             <>
