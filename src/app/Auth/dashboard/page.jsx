@@ -4,11 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import PostsFeed from '@/components/Postfeed';
+import { useAuth } from '@/Authcontext/Authcontext';
 
 export default function Page() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('Feed'); // State to track selected tab
-
+  const {user} = useAuth();
   const sidebarVariants = {
     hidden: { x: '-100%' },
     visible: { x: 0 },
@@ -38,6 +39,8 @@ export default function Page() {
 
         <input
           type="text"
+          value={user?.username || ''}
+          
           placeholder="Search students, projects, hackathons..."
           className="w-full px-4 py-2 sm:px-6 sm:py-3 rounded-xl bg-white/10 text-white placeholder-gray-300 outline-none focus:ring-2 focus:ring-purple-500 transition-all"
         />
