@@ -517,7 +517,7 @@ const handleLike = async (postId) => {
   );
 };
 
-  // ... (keep all the imports and other code the same until the return statement)
+  // ... (keep all imports and other code the same)
 
   return (
     <div className="flex flex-col h-full">
@@ -602,17 +602,10 @@ const handleLike = async (postId) => {
         </motion.div>
       )}
 
-      {/* Posts Feed - Modified to show one large post at a time */}
-      <div 
-        ref={feedRef} 
-        className="flex-1 overflow-y-auto"
-        style={{ 
-          scrollbarWidth: 'thin',
-          scrollSnapType: 'y mandatory'
-        }}
-      >
+      {/* Single Post Display */}
+      <div className="flex-1">
         {posts.length === 0 && !loading ? (
-          <div className="flex flex-col items-center justify-center py-10 text-gray-300 h-full">
+          <div className="flex flex-col items-center justify-center h-full text-gray-300">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
@@ -625,20 +618,62 @@ const handleLike = async (postId) => {
             </button>
           </div>
         ) : (
-          <div className="space-y-0"> {/* Removed space between posts */}
-            {posts.map((post) => (
+          <div className="h-full">
+            {posts.slice(0, 1).map((post) => ( // Only show first post
               <div 
                 key={post.id} 
-                className="h-screen flex items-center justify-center p-4"
-                style={{ scrollSnapAlign: 'start' }}
+                className="h-full flex flex-col"
               >
-                <PostCard post={post} />
+                <div className="overflow-y-auto flex-1"> {/* Scrollable area */}
+                  <div className="p-4"> {/* Added padding */}
+                    <PostCard post={post} />
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
     </div>
+  );
+};
+
+// Modify the PostCard component to be larger
+const PostCard = ({ post }) => {
+  // ... (keep all existing PostCard code)
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20"
+    >
+      {/* Increase the size of media content */}
+      {post.media && (
+        <div className="rounded-lg overflow-hidden my-2 bg-black/20 flex items-center justify-center h-96"> {/* Increased height */}
+          {isImage ? (
+            <img 
+              src={post.media} 
+              alt="Post media" 
+              className="w-full h-full object-contain rounded-lg" 
+            />
+          ) : isVideo ? (
+            <video 
+              controls 
+              className="w-full h-full object-contain rounded-lg"
+            >
+              <source src={post.media} />
+            </video>
+          ) : (
+            <p className="text-xs text-gray-400">Unsupported media</p>
+          )}
+        </div>
+      )}
+
+      {/* Rest of the PostCard component remains the same */}
+      {/* ... */}
+    </motion.div>
   );
 };
 
