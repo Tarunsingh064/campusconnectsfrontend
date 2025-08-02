@@ -21,19 +21,21 @@ const PostsFeed = () => {
   }, [posts]);
 
   const fetchPosts = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/');
-      const data = await res.json();
-      
-      setPosts(data);
-    } catch (error) {
-      console.error('Failed to fetch posts:', error);
-    } finally {
-      setLoading(false);
-    }
-    
-  };
+  setLoading(true);
+  try {
+    const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/', {
+      headers: {
+        Authorization: `Bearer ${Cookies.get('access_token')}`,
+      },
+    });
+    const data = await res.json();
+    setPosts(data);
+  } catch (error) {
+    console.error('Failed to fetch posts:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
    
 
