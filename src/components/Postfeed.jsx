@@ -517,6 +517,8 @@ const handleLike = async (postId) => {
   );
 };
 
+  // ... (keep all the imports and other code the same until the return statement)
+
   return (
     <div className="flex flex-col h-full">
       {/* Header with Refresh and Create Post */}
@@ -600,14 +602,13 @@ const handleLike = async (postId) => {
         </motion.div>
       )}
 
-      {/* Posts Feed with Fixed Height */}
+      {/* Posts Feed - Modified to show one large post at a time */}
       <div 
         ref={feedRef} 
-        className="flex-1 overflow-y-auto pr-2"
+        className="flex-1 overflow-y-auto"
         style={{ 
           scrollbarWidth: 'thin',
-          height: '600px',
-          maxHeight: '600px'
+          scrollSnapType: 'y mandatory'
         }}
       >
         {posts.length === 0 && !loading ? (
@@ -624,9 +625,15 @@ const handleLike = async (postId) => {
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-0"> {/* Removed space between posts */}
             {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
+              <div 
+                key={post.id} 
+                className="h-screen flex items-center justify-center p-4"
+                style={{ scrollSnapAlign: 'start' }}
+              >
+                <PostCard post={post} />
+              </div>
             ))}
           </div>
         )}
