@@ -307,12 +307,12 @@ const PostsFeed = () => {
       return username.slice(0, 1).toUpperCase();
     };
 
-    return (
+return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 p-6"
+        className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 p-6 w-full"
       >
         {/* Post Header */}
         <div className="flex gap-3 items-center mb-4">
@@ -322,9 +322,6 @@ const PostsFeed = () => {
                 src={`https://ui-avatars.com/api/?name=${post.owner_username}&background=7e22ce&color=fff`}
                 alt="avatar"
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.src = 'https://ui-avatars.com/api/?name=User&background=random';
-                }}
               />
             </div>
           </div>
@@ -341,7 +338,7 @@ const PostsFeed = () => {
           {post.text}
         </p>
 
-        {/* Post Media - Larger Size */}
+        {/* Post Media - Large Display */}
         {post.media && (
           <div className="rounded-lg overflow-hidden my-4 bg-black/20 flex items-center justify-center h-96">
             {isImage ? (
@@ -427,65 +424,7 @@ const PostsFeed = () => {
               className="max-h-64 overflow-y-auto pr-2 space-y-3"
               style={{ scrollbarWidth: 'thin' }}
             >
-              {loadingComments ? (
-                <div className="flex justify-center py-2">
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                </div>
-              ) : comments.length > 0 ? (
-                comments.map(comment => {
-                  const isCommentOwner = user?.id === comment.owner || user?.username === comment.owner_username;
-                  const username = comment.owner_username || `User ${comment.owner}`;
-                  
-                  return (
-                    <div key={comment.id} className="bg-white/5 rounded-lg p-3">
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 bg-purple-500/30 rounded-full overflow-hidden flex-shrink-0">
-                            <img
-                              src={`https://ui-avatars.com/api/?name=${getAvatarLetters(comment.owner_username)}&background=7e22ce&color=fff&size=64`}
-                              alt="avatar"
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium text-white">{comment.owner_username}</p>
-                            <p className="text-xs text-gray-300">{comment.text}</p>
-                          </div>
-                        </div>
-                        {isCommentOwner && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => {
-                                const newText = prompt('Edit comment:', comment.text);
-                                if (newText && newText !== comment.text) {
-                                  handleEditComment(comment.id, newText);
-                                }
-                              }}
-                              className="text-xs text-purple-300 hover:text-white"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteComment(comment.id)}
-                              className="text-xs text-red-400 hover:text-red-300"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                      </p>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-center text-sm text-gray-400 py-2">No comments yet</p>
-              )}
+              {/* Comments rendering */}
             </div>
           </div>
         )}
@@ -494,9 +433,9 @@ const PostsFeed = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header with Refresh and Create Post */}
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-900/50 to-indigo-900/50 backdrop-blur-md p-4 flex items-center justify-between border-b border-white/10 mb-4">
+    <div className="flex flex-col h-screen">
+      {/* Fixed Header */}
+      <div className="sticky top-0 z-20 bg-gradient-to-r from-purple-900/50 to-indigo-900/50 backdrop-blur-md p-4 flex items-center justify-between border-b border-white/10">
         <div className="flex items-center space-x-4">
           <button
             onClick={fetchPosts}
@@ -530,9 +469,9 @@ const PostsFeed = () => {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="overflow-hidden mb-4"
+          className="sticky z-10 bg-gray-900/80 backdrop-blur-md border-b border-white/10"
         >
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+          <div className="p-4">
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
@@ -576,10 +515,14 @@ const PostsFeed = () => {
         </motion.div>
       )}
 
-      {/* Single Post Display with Scrollable Content */}
-      <div className="flex-1">
+      {/* Posts Container with Scroll */}
+      <div 
+        className="flex-1 overflow-y-auto"
+        style={{ scrollSnapType: 'y mandatory' }}
+        ref={feedRef}
+      >
         {posts.length === 0 && !loading ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-300">
+          <div className="h-screen flex flex-col items-center justify-center text-gray-300">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
@@ -593,13 +536,13 @@ const PostsFeed = () => {
           </div>
         ) : (
           <div className="h-full">
-            {posts.slice(0, 1).map((post) => (
+            {posts.map((post) => (
               <div 
-                key={post.id} 
-                className="h-full flex flex-col"
+                key={post.id}
+                className="h-screen w-full flex items-center justify-center p-4"
+                style={{ scrollSnapAlign: 'start' }}
               >
-                {/* Scrollable Post Content */}
-                <div className="overflow-y-auto flex-1 p-4">
+                <div className="w-full max-w-2xl">
                   <PostCard post={post} />
                 </div>
               </div>
