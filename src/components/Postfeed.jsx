@@ -21,23 +21,21 @@ const PostsFeed = () => {
   }, [posts]);
 
   const fetchPosts = async () => {
-  setLoading(true);
-  try {
-    const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/', {
-      headers: {
-        Authorization: `Bearer ${Cookies.get('access_token')}`,
-      },
-    });
-    const data = await res.json();
-    setPosts(data);
-  } catch (error) {
-    console.error('Failed to fetch posts:', error);
-  } finally {
-    setLoading(false);
-  }
-};
-
-   
+    setLoading(true);
+    try {
+      const res = await fetch('https://campusconnect-ki0p.onrender.com/api/post/posts/', {
+        headers: {
+          Authorization: `Bearer ${Cookies.get('access_token')}`,
+        },
+      });
+      const data = await res.json();
+      setPosts(data);
+    } catch (error) {
+      console.error('Failed to fetch posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreate = async () => {
     if (!text.trim() && !media) {
@@ -61,7 +59,6 @@ const PostsFeed = () => {
 
       if (res.ok) {
         const newPost = await res.json();
-        
         setPosts([newPost, ...posts]);
         setText('');
         setMedia(null);
@@ -133,391 +130,368 @@ const PostsFeed = () => {
     fetchPosts();
   }, []);
 
-const PostCard = ({ post }) => {
-  const isImage = post.media?.match(/\.(jpeg|jpg|png|webp)$/);
-  const isVideo = post.media?.match(/\.(mp4|webm)$/);
-  const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState([]);
-  const [commentText, setCommentText] = useState('');
-  const [loadingComments, setLoadingComments] = useState(false);
-  const [loadingLike, setLoadingLike] = useState(false);
-  const commentsRef = useRef(null);
+  const PostCard = ({ post }) => {
+    const isImage = post.media?.match(/\.(jpeg|jpg|png|webp)$/);
+    const isVideo = post.media?.match(/\.(mp4|webm)$/);
+    const [showComments, setShowComments] = useState(false);
+    const [comments, setComments] = useState([]);
+    const [commentText, setCommentText] = useState('');
+    const [loadingComments, setLoadingComments] = useState(false);
+    const [loadingLike, setLoadingLike] = useState(false);
+    const commentsRef = useRef(null);
 
-  // Enhanced ownership check
-  const isOwner = user?.id === post.owner || user?.username === post.owner_username;
+    const isOwner = user?.id === post.owner || user?.username === post.owner_username;
 
-  useEffect(() => {
-    if (showComments && commentsRef.current) {
-      commentsRef.current.scrollTop = commentsRef.current.scrollHeight;
-    }
-  }, [comments, showComments]);
-  
-
-  const fetchComments = async () => {
-    setLoadingComments(true);
-    try {
-      const res = await fetch(
-        `https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/comments/`,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get('access_token')}`
-          }
-        }
-      );
-      const data = await res.json();
-      setComments(data);
-    } catch (error) {
-      console.error('Failed to fetch comments:', error);
-    } finally {
-      setLoadingComments(false);
-    }
-  };
-
-const handleLike = async (postId) => {
-  try {
-    const response = await axios.post(
-      `https://campusconnect-ki0p.onrender.com/api/post/posts/${postId}/like/`,
-      {status:"liked"},
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("access_token")}`,
-        },
-      }
-    );
-
-    const updatedPosts = posts.map((post) => {
-      if (post.id === postId) {
-        const isLiked = response.data.status === "liked";
-        return {
-          ...post,
-          is_liked: isLiked,
-          like_count: post.like_count + (isLiked ? 1 : -1),
-        };
-      }
-      return post;
-    });
-
-    setPosts(updatedPosts);
-    console.log("✅ Like status:", response.data);
-    console.log("✅ post status:", updatedPosts);
-  } catch (error) {
-    console.error("❌ Error liking post", error);
-  }
-};
-
-
-
-
-
-
-  const handleCommentSubmit = async (e) => {
-  e.preventDefault();
-  if (!commentText.trim()) return;
-
-  try {
-    const formData = new FormData();
-    formData.append('text', commentText); // Explicitly convert to string
-
-    const res = await fetch(
-      `https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/comment/`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${Cookies.get('access_token')}`
-        },
-        body: formData // Using FormData instead of JSON
-      }
-    );
-
-    if (res.ok) {
-      const newComment = await res.json();
-      setComments([...comments, newComment]);
-      setCommentText('');
-      if (commentsRef.current) {
+    useEffect(() => {
+      if (showComments && commentsRef.current) {
         commentsRef.current.scrollTop = commentsRef.current.scrollHeight;
       }
-    } else {
-      const errorData = await res.json();
-      console.error('Comment submission error:', errorData);
-    }
-  } catch (error) {
-    console.error('Failed to post comment:', error);
-  }
-  
-};
-  const handleEditComment = async (id, newText) => {
-    if (!newText.trim()) return;
+    }, [comments, showComments]);
 
-    try {
-      const res = await fetch(
-        `https://campusconnect-ki0p.onrender.com/api/post/comments/${id}/`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${Cookies.get('access_token')}`
-          },
-          body: JSON.stringify({ text: newText })
-        }
-      );
-
-      if (res.ok) {
-        const updatedComment = await res.json();
-        setComments(comments.map(comment => 
-          comment.id === id ? updatedComment : comment
-        ));
-      }
-    } catch (error) {
-      console.error('Failed to edit comment:', error);
-    }
-  };
-
-  const handleDeleteComment = async (id) => {
-    if (confirm('Are you sure you want to delete this comment?')) {
+    const fetchComments = async () => {
+      setLoadingComments(true);
       try {
         const res = await fetch(
-          `https://campusconnect-ki0p.onrender.com/api/post/comments/${id}/`,
+          `https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/comments/`,
           {
-            method: 'DELETE',
             headers: {
               Authorization: `Bearer ${Cookies.get('access_token')}`
             }
           }
         );
+        const data = await res.json();
+        setComments(data);
+      } catch (error) {
+        console.error('Failed to fetch comments:', error);
+      } finally {
+        setLoadingComments(false);
+      }
+    };
+
+    const handleLike = async (postId) => {
+      try {
+        const response = await axios.post(
+          `https://campusconnect-ki0p.onrender.com/api/post/posts/${postId}/like/`,
+          {status:"liked"},
+          {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("access_token")}`,
+            },
+          }
+        );
+
+        const updatedPosts = posts.map((post) => {
+          if (post.id === postId) {
+            const isLiked = response.data.status === "liked";
+            return {
+              ...post,
+              is_liked: isLiked,
+              like_count: post.like_count + (isLiked ? 1 : -1),
+            };
+          }
+          return post;
+        });
+
+        setPosts(updatedPosts);
+      } catch (error) {
+        console.error("Error liking post", error);
+      }
+    };
+
+    const handleCommentSubmit = async (e) => {
+      e.preventDefault();
+      if (!commentText.trim()) return;
+
+      try {
+        const formData = new FormData();
+        formData.append('text', commentText);
+
+        const res = await fetch(
+          `https://campusconnect-ki0p.onrender.com/api/post/posts/${post.id}/comment/`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${Cookies.get('access_token')}`
+            },
+            body: formData
+          }
+        );
 
         if (res.ok) {
-          setComments(comments.filter(comment => comment.id !== id));
+          const newComment = await res.json();
+          setComments([...comments, newComment]);
+          setCommentText('');
+          if (commentsRef.current) {
+            commentsRef.current.scrollTop = commentsRef.current.scrollHeight;
+          }
+        } else {
+          const errorData = await res.json();
+          console.error('Comment submission error:', errorData);
         }
       } catch (error) {
-        console.error('Failed to delete comment:', error);
+        console.error('Failed to post comment:', error);
       }
-    }
-  };
+    };
 
-  const toggleComments = () => {
-    if (!showComments) {
-      fetchComments();
-    }
-    setShowComments(!showComments);
-  };
+    const handleEditComment = async (id, newText) => {
+      if (!newText.trim()) return;
 
-  const handleEditClick = () => {
-    const newText = prompt('Edit your post:', post.text);
-    if (newText && newText !== post.text) {
-      handleEdit(post.id, newText);
-    }
-  };
+      try {
+        const res = await fetch(
+          `https://campusconnect-ki0p.onrender.com/api/post/comments/${id}/`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${Cookies.get('access_token')}`
+            },
+            body: JSON.stringify({ text: newText })
+          }
+        );
 
-  const handleDeleteClick = () => {
-    if (confirm('Are you sure you want to delete this post?')) {
-      handleDelete(post.id);
-    }
-  };
+        if (res.ok) {
+          const updatedComment = await res.json();
+          setComments(comments.map(comment => 
+            comment.id === id ? updatedComment : comment
+          ));
+        }
+      } catch (error) {
+        console.error('Failed to edit comment:', error);
+      }
+    };
 
-  const getAvatarLetters = (username) => {
-    if (!username) return 'US';
-    return username.slice(0, 1).toUpperCase();
-  };
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-4 border border-white/20"
-    >
-      <div className="flex gap-3">
-        <div className="flex-shrink-0">
-          <div className="w-10 h-10 bg-purple-500/30 rounded-full overflow-hidden flex items-center justify-center">
-            <img
-              src={`https://ui-avatars.com/api/?name=${post.owner_username}&background=7e22ce&color=fff`}
-              alt="avatar"
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.src = 'https://ui-avatars.com/api/?name=User&background=random';
-              }}
-            />
+    const handleDeleteComment = async (id) => {
+      if (confirm('Are you sure you want to delete this comment?')) {
+        try {
+          const res = await fetch(
+            `https://campusconnect-ki0p.onrender.com/api/post/comments/${id}/`,
+            {
+              method: 'DELETE',
+              headers: {
+                Authorization: `Bearer ${Cookies.get('access_token')}`
+              }
+            }
+          );
+
+          if (res.ok) {
+            setComments(comments.filter(comment => comment.id !== id));
+          }
+        } catch (error) {
+          console.error('Failed to delete comment:', error);
+        }
+      }
+    };
+
+    const toggleComments = () => {
+      if (!showComments) {
+        fetchComments();
+      }
+      setShowComments(!showComments);
+    };
+
+    const handleEditClick = () => {
+      const newText = prompt('Edit your post:', post.text);
+      if (newText && newText !== post.text) {
+        handleEdit(post.id, newText);
+      }
+    };
+
+    const handleDeleteClick = () => {
+      if (confirm('Are you sure you want to delete this post?')) {
+        handleDelete(post.id);
+      }
+    };
+
+    const getAvatarLetters = (username) => {
+      if (!username) return 'US';
+      return username.slice(0, 1).toUpperCase();
+    };
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 p-6"
+      >
+        {/* Post Header */}
+        <div className="flex gap-3 items-center mb-4">
+          <div className="flex-shrink-0">
+            <div className="w-12 h-12 bg-purple-500/30 rounded-full overflow-hidden flex items-center justify-center">
+              <img
+                src={`https://ui-avatars.com/api/?name=${post.owner_username}&background=7e22ce&color=fff`}
+                alt="avatar"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.src = 'https://ui-avatars.com/api/?name=User&background=random';
+                }}
+              />
+            </div>
           </div>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h2 className="font-semibold text-white">{post.owner_username}</h2>
-            <span className="text-gray-300">·</span>
+          <div>
+            <h2 className="font-semibold text-white text-lg">{post.owner_username}</h2>
             <p className="text-xs text-gray-300">
               {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
             </p>
           </div>
+        </div>
 
-          <p className="text-gray-100 mt-1 mb-2 whitespace-pre-wrap">
-            {post.text}
-          </p>
+        {/* Post Text */}
+        <p className="text-gray-100 text-lg mb-4 whitespace-pre-wrap">
+          {post.text}
+        </p>
 
-          {post.media && (
-            <div className="rounded-lg overflow-hidden mt-2 mb-2 max-h-48 bg-black/20 flex items-center justify-center">
-              {isImage ? (
-                <img 
-                  src={post.media} 
-                  alt="Post media" 
-                  className="max-w-full max-h-full object-contain rounded-lg" 
-                />
-              ) : isVideo ? (
-                <video 
-                  controls 
-                  className="max-w-full max-h-48 object-contain rounded-lg"
-                >
-                  <source src={post.media} />
-                </video>
-              ) : (
-                <p className="text-xs text-gray-400">Unsupported media</p>
-              )}
-            </div>
-          )}
-
-          <div className="flex justify-between items-center mt-3">
-            <div className="flex gap-4">
-
-              {post.is_liked ? (
-  <button onClick={() => handleLike(post.id)} className="text-red-500">
-    ❤️ {post.like_count}
-  </button>
-) : (
-  <button onClick={() => handleLike(post.id)} className="text-gray-400">
-    🤍 {post.like_count}
-  </button>
-)}
-              
-              <button 
-                onClick={toggleComments}
-                className="flex items-center gap-1 text-sm text-gray-300 hover:text-white transition"
+        {/* Post Media - Larger Size */}
+        {post.media && (
+          <div className="rounded-lg overflow-hidden my-4 bg-black/20 flex items-center justify-center h-96">
+            {isImage ? (
+              <img 
+                src={post.media} 
+                alt="Post media" 
+                className="w-full h-full object-contain rounded-lg" 
+              />
+            ) : isVideo ? (
+              <video 
+                controls 
+                className="w-full h-full object-contain rounded-lg"
               >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className="h-5 w-5" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={1.5} 
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" 
-                  />
-                </svg>
-                {/*<span>{post.comment_count || 0}</span>*/}
-              </button>
-            </div>
-
-            {isOwner && (
-              <div className="flex gap-4 text-sm">
-                <button
-                  onClick={handleEditClick}
-                  className="text-purple-300 hover:text-white transition"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={handleDeleteClick}
-                  className="text-red-400 hover:text-red-300 transition"
-                >
-                  Delete
-                </button>
-              </div>
+                <source src={post.media} />
+              </video>
+            ) : (
+              <p className="text-xs text-gray-400">Unsupported media</p>
             )}
           </div>
+        )}
 
-          {showComments && (
-            <div className="mt-4">
-              <form onSubmit={handleCommentSubmit} className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Write a comment..."
-                  className="flex-1 bg-white/5 border border-white/20 rounded-full px-4 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
-                />
-                <button 
-                  type="submit"
-                  disabled={!commentText.trim()}
-                  className="px-3 py-1 bg-purple-600 text-white rounded-full text-sm hover:bg-purple-700 transition disabled:bg-purple-800 disabled:cursor-not-allowed"
-                >
-                  Post
-                </button>
-              </form>
+        {/* Post Actions */}
+        <div className="flex justify-between items-center mt-4 pt-4 border-t border-white/20">
+          <div className="flex gap-6">
+            {post.is_liked ? (
+              <button onClick={() => handleLike(post.id)} className="text-red-500 text-xl">
+                ❤️ {post.like_count}
+              </button>
+            ) : (
+              <button onClick={() => handleLike(post.id)} className="text-gray-400 text-xl">
+                🤍 {post.like_count}
+              </button>
+            )}
+            
+            <button 
+              onClick={toggleComments}
+              className="flex items-center gap-1 text-gray-300 hover:text-white transition text-xl"
+            >
+              💬
+            </button>
+          </div>
 
-              <div 
-                ref={commentsRef}
-                className="max-h-48 overflow-y-auto pr-2 space-y-3"
-                style={{ scrollbarWidth: 'thin' }}
+          {isOwner && (
+            <div className="flex gap-4">
+              <button
+                onClick={handleEditClick}
+                className="text-purple-300 hover:text-white transition"
               >
-                {loadingComments ? (
-                  <div className="flex justify-center py-2">
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  </div>
-                ) : comments.length > 0 ? (
-                  comments.map(comment => {
-                    const isCommentOwner = user?.id === comment.owner || user?.username === comment.owner_username;
-                    const username = comment.owner_username || `User ${comment.owner}`;
-                    
-                    return (
-                      <div key={comment.id} className="bg-white/5 rounded-lg p-3">
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 bg-purple-500/30 rounded-full overflow-hidden flex-shrink-0">
-                              <img
-                                src={`https://ui-avatars.com/api/?name=${getAvatarLetters(comment.owner_username)}&background=7e22ce&color=fff&size=64`}
-                                alt="avatar"
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div>
-                              <p className="text-xs font-medium text-white">{comment.owner_username}</p>
-                              <p className="text-xs text-gray-300">{comment.text}</p>
-                            </div>
-                          </div>
-                          {isCommentOwner && (
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => {
-                                  const newText = prompt('Edit comment:', comment.text);
-                                  if (newText && newText !== comment.text) {
-                                    handleEditComment(comment.id, newText);
-                                  }
-                                }}
-                                className="text-xs text-purple-300 hover:text-white"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDeleteComment(comment.id)}
-                                className="text-xs text-red-400 hover:text-red-300"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                        </p>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <p className="text-center text-sm text-gray-400 py-2">No comments yet</p>
-                )}
-              </div>
+                Edit
+              </button>
+              <button
+                onClick={handleDeleteClick}
+                className="text-red-400 hover:text-red-300 transition"
+              >
+                Delete
+              </button>
             </div>
           )}
         </div>
-      </div>
-    </motion.div>
-  );
-};
 
-  // ... (keep all imports and other code the same)
+        {/* Comments Section */}
+        {showComments && (
+          <div className="mt-6">
+            <form onSubmit={handleCommentSubmit} className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Write a comment..."
+                className="flex-1 bg-white/5 border border-white/20 rounded-full px-4 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+              />
+              <button 
+                type="submit"
+                disabled={!commentText.trim()}
+                className="px-4 py-2 bg-purple-600 text-white rounded-full text-sm hover:bg-purple-700 transition disabled:bg-purple-800 disabled:cursor-not-allowed"
+              >
+                Post
+              </button>
+            </form>
+
+            <div 
+              ref={commentsRef}
+              className="max-h-64 overflow-y-auto pr-2 space-y-3"
+              style={{ scrollbarWidth: 'thin' }}
+            >
+              {loadingComments ? (
+                <div className="flex justify-center py-2">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              ) : comments.length > 0 ? (
+                comments.map(comment => {
+                  const isCommentOwner = user?.id === comment.owner || user?.username === comment.owner_username;
+                  const username = comment.owner_username || `User ${comment.owner}`;
+                  
+                  return (
+                    <div key={comment.id} className="bg-white/5 rounded-lg p-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-purple-500/30 rounded-full overflow-hidden flex-shrink-0">
+                            <img
+                              src={`https://ui-avatars.com/api/?name=${getAvatarLetters(comment.owner_username)}&background=7e22ce&color=fff&size=64`}
+                              alt="avatar"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-white">{comment.owner_username}</p>
+                            <p className="text-xs text-gray-300">{comment.text}</p>
+                          </div>
+                        </div>
+                        {isCommentOwner && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                const newText = prompt('Edit comment:', comment.text);
+                                if (newText && newText !== comment.text) {
+                                  handleEditComment(comment.id, newText);
+                                }
+                              }}
+                              className="text-xs text-purple-300 hover:text-white"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteComment(comment.id)}
+                              className="text-xs text-red-400 hover:text-red-300"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                      </p>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-center text-sm text-gray-400 py-2">No comments yet</p>
+              )}
+            </div>
+          </div>
+        )}
+      </motion.div>
+    );
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -602,7 +576,7 @@ const handleLike = async (postId) => {
         </motion.div>
       )}
 
-      {/* Single Post Display */}
+      {/* Single Post Display with Scrollable Content */}
       <div className="flex-1">
         {posts.length === 0 && !loading ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-300">
@@ -619,15 +593,14 @@ const handleLike = async (postId) => {
           </div>
         ) : (
           <div className="h-full">
-            {posts.slice(0, 1).map((post) => ( // Only show first post
+            {posts.slice(0, 1).map((post) => (
               <div 
                 key={post.id} 
                 className="h-full flex flex-col"
               >
-                <div className="overflow-y-auto flex-1"> {/* Scrollable area */}
-                  <div className="p-4"> {/* Added padding */}
-                    <PostCard post={post} />
-                  </div>
+                {/* Scrollable Post Content */}
+                <div className="overflow-y-auto flex-1 p-4">
+                  <PostCard post={post} />
                 </div>
               </div>
             ))}
@@ -635,45 +608,6 @@ const handleLike = async (postId) => {
         )}
       </div>
     </div>
-  );
-};
-
-// Modify the PostCard component to be larger
-const PostCard = ({ post }) => {
-  // ... (keep all existing PostCard code)
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20"
-    >
-      {/* Increase the size of media content */}
-      {post.media && (
-        <div className="rounded-lg overflow-hidden my-2 bg-black/20 flex items-center justify-center h-96"> {/* Increased height */}
-          {isImage ? (
-            <img 
-              src={post.media} 
-              alt="Post media" 
-              className="w-full h-full object-contain rounded-lg" 
-            />
-          ) : isVideo ? (
-            <video 
-              controls 
-              className="w-full h-full object-contain rounded-lg"
-            >
-              <source src={post.media} />
-            </video>
-          ) : (
-            <p className="text-xs text-gray-400">Unsupported media</p>
-          )}
-        </div>
-      )}
-
-      {/* Rest of the PostCard component remains the same */}
-      {/* ... */}
-    </motion.div>
   );
 };
 
