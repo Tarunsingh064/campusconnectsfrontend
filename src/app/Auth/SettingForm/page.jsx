@@ -60,9 +60,10 @@ export default function SettingsForm() {
 
     try {
       const url = 'https://campusconnect-ki0p.onrender.com/api/userbio/portfolio/';
+      const url1 = 'https://campusconnect-ki0p.onrender.com/api/userbio/portfolio/create/';
       const method = bioExists ? axios.put : axios.post;
-
-      await method(url, formData, {
+      const useurl = bioExists ?url :url1;
+      await method(useurl, formData, {
         headers: {
           Authorization: `Bearer ${Cookies.get('access_token')}`,
           'Content-Type': 'multipart/form-data',
