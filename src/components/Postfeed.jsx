@@ -11,6 +11,7 @@ const PostsFeed = () => {
   const [posts, setPosts] = useState([]);
   const [text, setText] = useState('');
   const [media, setMedia] = useState(null);
+  const [mediaPreview, setMediaPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const feedRef = useRef();
@@ -62,6 +63,7 @@ const PostsFeed = () => {
         setPosts([newPost, ...posts]);
         setText('');
         setMedia(null);
+        setMediaPreview(null);
         setShowCreate(false);
       } else {
         const errData = await res.json();
@@ -126,14 +128,35 @@ const PostsFeed = () => {
     }
   };
 
+  const handleMediaChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setMedia(file);
+      
+      // Create a preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setMediaPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeMedia = () => {
+    setMedia(null);
+    setMediaPreview(null);
+  };
+
   const PostCard = ({ post }) => {
-    const isImage = post.media?.match(/\.(jpeg|jpg|png|webp)$/);
-    const isVideo = post.media?.match(/\.(mp4|webm)$/);
+    const isImage = post.media?.match(/\.(jpeg|jpg|png|webp|gif)$/i);
+    const isVideo = post.media?.match(/\.(mp4|webm|mov)$/i);
     const [showComments, setShowComments] = useState(false);
     const [comments, setComments] = useState([]);
     const [commentText, setCommentText] = useState('');
     const [loadingComments, setLoadingComments] = useState(false);
     const [loadingLike, setLoadingLike] = useState(false);
+    const [isLiked, setIsLiked] = useState(post.is_liked);
+    const [likeCount, setLikeCount] = useState(post.like_count);
     const commentsRef = useRef(null);
 
     const isOwner = user?.id === post.owner || user?.username === post.owner_username;
@@ -165,6 +188,7 @@ const PostsFeed = () => {
     };
 
     const handleLike = async (postId) => {
+      setLoadingLike(true);
       try {
         const response = await axios.post(
           `https://campusconnect-ki0p.onrender.com/api/post/posts/${postId}/like/`,
@@ -176,21 +200,24 @@ const PostsFeed = () => {
           }
         );
 
-        const updatedPosts = posts.map((post) => {
-          if (post.id === postId) {
-            const isLiked = response.data.status === "liked";
+        setIsLiked(response.data.status === "liked");
+        setLikeCount(prev => response.data.status === "liked" ? prev + 1 : prev - 1);
+        
+        // Update the posts array to reflect the like change
+        setPosts(prevPosts => prevPosts.map(p => {
+          if (p.id === postId) {
             return {
-              ...post,
-              is_liked: isLiked,
-              like_count: post.like_count + (isLiked ? 1 : -1),
+              ...p,
+              is_liked: response.data.status === "liked",
+              like_count: response.data.status === "liked" ? p.like_count + 1 : p.like_count - 1
             };
           }
-          return post;
-        });
-
-        setPosts(updatedPosts);
+          return p;
+        }));
       } catch (error) {
         console.error("Error liking post", error);
+      } finally {
+        setLoadingLike(false);
       }
     };
 
@@ -308,12 +335,12 @@ const PostsFeed = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 p-6 w-full"
+        className="bg-white rounded-lg border border-gray-300 overflow-hidden w-full max-w-2xl mx-auto mb-6"
       >
         {/* Post Header */}
-        <div className="flex gap-3 items-center mb-4">
-          <div className="flex-shrink-0">
-            <div className="w-12 h-12 bg-purple-500/30 rounded-full overflow-hidden flex items-center justify-center">
+        <div className="flex items-center justify-between p-3 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
               <img
                 src={`https://ui-avatars.com/api/?name=${post.owner_username}&background=7e22ce&color=fff`}
                 alt="avatar"
@@ -323,33 +350,48 @@ const PostsFeed = () => {
                 }}
               />
             </div>
+            <div>
+              <h2 className="font-semibold text-sm">{post.owner_username}</h2>
+            </div>
           </div>
-          <div>
-            <h2 className="font-semibold text-white text-lg">{post.owner_username}</h2>
-            <p className="text-xs text-gray-300">
-              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-            </p>
-          </div>
+          {isOwner && (
+            <div className="relative group">
+              <button className="p-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+              </button>
+              <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block border border-gray-200">
+                <button
+                  onClick={handleEditClick}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={handleDeleteClick}
+                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Post Text */}
-        <p className="text-gray-100 text-lg mb-4 whitespace-pre-wrap">
-          {post.text}
-        </p>
-
-        {/* Post Media - Large Display */}
+        {/* Post Media */}
         {post.media && (
-          <div className="rounded-lg overflow-hidden my-4 bg-black/20 flex items-center justify-center h-96">
+          <div className="w-full aspect-square bg-black flex items-center justify-center">
             {isImage ? (
               <img 
                 src={post.media} 
                 alt="Post media" 
-                className="w-full h-full object-contain rounded-lg" 
+                className="w-full h-full object-contain" 
               />
             ) : isVideo ? (
               <video 
                 controls 
-                className="w-full h-full object-contain rounded-lg"
+                className="w-full h-full object-contain"
               >
                 <source src={post.media} />
               </video>
@@ -360,99 +402,113 @@ const PostsFeed = () => {
         )}
 
         {/* Post Actions */}
-        <div className="flex justify-between items-center mt-4 pt-4 border-t border-white/20">
-          <div className="flex gap-6">
-            {post.is_liked ? (
-              <button onClick={() => handleLike(post.id)} className="text-red-500 text-xl">
-                ❤️ {post.like_count}
+        <div className="p-3">
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex gap-4">
+              <button 
+                onClick={() => handleLike(post.id)}
+                disabled={loadingLike}
+                className="focus:outline-none"
+              >
+                {isLiked ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ed4956" className="w-7 h-7">
+                    <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                  </svg>
+                )}
               </button>
-            ) : (
-              <button onClick={() => handleLike(post.id)} className="text-gray-400 text-xl">
-                🤍 {post.like_count}
+              <button 
+                onClick={toggleComments}
+                className="focus:outline-none"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" />
+                </svg>
               </button>
-            )}
-            
-            <button 
-              onClick={toggleComments}
-              className="flex items-center gap-1 text-gray-300 hover:text-white transition text-xl"
-            >
-              💬
+              <button className="focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                </svg>
+              </button>
+            </div>
+            <button className="focus:outline-none">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+              </svg>
             </button>
           </div>
 
-          {isOwner && (
-            <div className="flex gap-4">
-              <button
-                onClick={handleEditClick}
-                className="text-purple-300 hover:text-white transition"
-              >
-                Edit
-              </button>
-              <button
-                onClick={handleDeleteClick}
-                className="text-red-400 hover:text-red-300 transition"
-              >
-                Delete
-              </button>
+          {/* Likes count */}
+          {likeCount > 0 && (
+            <div className="mb-1">
+              <p className="text-sm font-semibold">{likeCount} {likeCount === 1 ? 'like' : 'likes'}</p>
             </div>
           )}
-        </div>
 
-        {/* Comments Section */}
-        {showComments && (
-          <div className="mt-6">
-            <form onSubmit={handleCommentSubmit} className="flex gap-2 mb-4">
-              <input
-                type="text"
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                placeholder="Write a comment..."
-                className="flex-1 bg-white/5 border border-white/20 rounded-full px-4 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
-              />
-              <button 
-                type="submit"
-                disabled={!commentText.trim()}
-                className="px-4 py-2 bg-purple-600 text-white rounded-full text-sm hover:bg-purple-700 transition disabled:bg-purple-800 disabled:cursor-not-allowed"
+          {/* Post Text */}
+          <div className="mb-2">
+            <p className="text-sm">
+              <span className="font-semibold mr-2">{post.owner_username}</span>
+              {post.text}
+            </p>
+          </div>
+
+          {/* Timestamp */}
+          <p className="text-xs text-gray-400 uppercase mb-2">
+            {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+          </p>
+
+          {/* Comments Section */}
+          {showComments && (
+            <div className="mt-3 border-t border-gray-200 pt-3">
+              <form onSubmit={handleCommentSubmit} className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Add a comment..."
+                  className="flex-1 text-sm border-none focus:ring-0 p-0 focus:outline-none"
+                />
+                <button 
+                  type="submit"
+                  disabled={!commentText.trim()}
+                  className={`text-sm font-semibold ${!commentText.trim() ? 'text-blue-300' : 'text-blue-500'}`}
+                >
+                  Post
+                </button>
+              </form>
+
+              <div 
+                ref={commentsRef}
+                className="max-h-48 overflow-y-auto space-y-3 mt-2"
               >
-                Post
-              </button>
-            </form>
-
-            <div 
-              ref={commentsRef}
-              className="max-h-64 overflow-y-auto pr-2 space-y-3"
-              style={{ scrollbarWidth: 'thin' }}
-            >
-              {loadingComments ? (
-                <div className="flex justify-center py-2">
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                </div>
-              ) : comments.length > 0 ? (
-                comments.map(comment => {
-                  const isCommentOwner = user?.id === comment.owner || user?.username === comment.owner_username;
-                  const username = comment.owner_username || `User ${comment.owner}`;
-                  
-                  return (
-                    <div key={comment.id} className="bg-white/5 rounded-lg p-3">
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 bg-purple-500/30 rounded-full overflow-hidden flex-shrink-0">
-                            <img
-                              src={`https://ui-avatars.com/api/?name=${getAvatarLetters(comment.owner_username)}&background=7e22ce&color=fff&size=64`}
-                              alt="avatar"
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium text-white">{comment.owner_username}</p>
-                            <p className="text-xs text-gray-300">{comment.text}</p>
-                          </div>
+                {loadingComments ? (
+                  <div className="flex justify-center py-2">
+                    <svg className="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                ) : comments.length > 0 ? (
+                  comments.map(comment => {
+                    const isCommentOwner = user?.id === comment.owner || user?.username === comment.owner_username;
+                    
+                    return (
+                      <div key={comment.id} className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="text-sm">
+                            <span className="font-semibold mr-2">{comment.owner_username}</span>
+                            {comment.text}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                          </p>
                         </div>
                         {isCommentOwner && (
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 ml-2">
                             <button
                               onClick={() => {
                                 const newText = prompt('Edit comment:', comment.text);
@@ -460,29 +516,48 @@ const PostsFeed = () => {
                                   handleEditComment(comment.id, newText);
                                 }
                               }}
-                              className="text-xs text-purple-300 hover:text-white"
+                              className="text-xs text-gray-500 hover:text-gray-700"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDeleteComment(comment.id)}
-                              className="text-xs text-red-400 hover:text-red-300"
+                              className="text-xs text-gray-500 hover:text-red-500"
                             >
                               Delete
                             </button>
                           </div>
                         )}
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                      </p>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-center text-sm text-gray-400 py-2">No comments yet</p>
-              )}
+                    );
+                  })
+                ) : (
+                  <p className="text-center text-sm text-gray-500 py-2">No comments yet</p>
+                )}
+              </div>
             </div>
+          )}
+        </div>
+
+        {/* Add comment input (always visible) */}
+        {!showComments && (
+          <div className="border-t border-gray-200 p-3">
+            <form onSubmit={handleCommentSubmit} className="flex items-center">
+              <input
+                type="text"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Add a comment..."
+                className="flex-1 text-sm border-none focus:ring-0 focus:outline-none"
+              />
+              <button 
+                type="submit"
+                disabled={!commentText.trim()}
+                className={`text-sm font-semibold ${!commentText.trim() ? 'text-blue-300' : 'text-blue-500'}`}
+              >
+                Post
+              </button>
+            </form>
           </div>
         )}
       </motion.div>
@@ -490,32 +565,35 @@ const PostsFeed = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Fixed Header */}
-      <div className="sticky top-0 z-20 bg-gradient-to-r from-purple-900/50 to-indigo-900/50 backdrop-blur-md p-4 flex items-center justify-between border-b border-white/10">
+      <div className="sticky top-0 z-20 bg-white border-b border-gray-300 p-4 flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <h1 className="text-xl font-semibold">CampusConnect</h1>
+        </div>
         <div className="flex items-center space-x-4">
           <button
             onClick={fetchPosts}
-            className="p-2 rounded-full hover:bg-white/10 transition"
+            className="p-2 rounded-full hover:bg-gray-100 transition"
             title="Refresh"
             disabled={loading}
           >
             {loading ? (
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
               </svg>
             )}
           </button>
           <button
             onClick={() => setShowCreate(!showCreate)}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-full text-sm font-medium transition"
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm font-medium transition"
           >
-            {showCreate ? 'Cancel' : 'New Post'}
+            {showCreate ? 'Cancel' : 'Create'}
           </button>
         </div>
       </div>
@@ -526,83 +604,84 @@ const PostsFeed = () => {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="sticky z-10 bg-gray-900/80 backdrop-blur-md border-b border-white/10"
+          className="sticky z-10 bg-white border-b border-gray-200 shadow-sm"
         >
           <div className="p-4">
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="What's on your mind?"
-              className="w-full p-3 rounded-lg bg-white/5 border border-white/20 text-white placeholder-gray-300 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full p-3 rounded border border-gray-300 text-gray-900 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               rows="3"
             />
             <div className="flex justify-between items-center mt-3">
-              <div>
+              <div className="flex items-center">
                 <input
                   type="file"
                   accept="image/*,video/*"
-                  onChange={(e) => setMedia(e.target.files[0])}
+                  onChange={handleMediaChange}
                   className="hidden"
                   id="media-upload"
                 />
                 <label
                   htmlFor="media-upload"
-                  className="p-2 rounded-full hover:bg-white/10 transition cursor-pointer text-white"
+                  className="p-2 rounded-full hover:bg-gray-100 transition cursor-pointer text-gray-600"
                   title="Add media"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
                   </svg>
                 </label>
-                {media && (
-                  <span className="ml-2 text-sm text-gray-300">
-                    {media.name}
-                  </span>
+                {mediaPreview && (
+                  <div className="ml-3 relative">
+                    {media.type.startsWith('image/') ? (
+                      <img src={mediaPreview} alt="Preview" className="h-10 w-10 object-cover rounded" />
+                    ) : (
+                      <video src={mediaPreview} className="h-10 w-10 object-cover rounded" />
+                    )}
+                    <button
+                      onClick={removeMedia}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
                 )}
               </div>
               <button
                 onClick={handleCreate}
                 disabled={loading || (!text.trim() && !media)}
-                className={`px-4 py-2 rounded-full font-medium ${(!text.trim() && !media) || loading ? 'bg-purple-800 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'} text-white transition`}
+                className={`px-4 py-2 rounded font-medium ${(!text.trim() && !media) || loading ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white transition`}
               >
-                {loading ? 'Posting...' : 'Post'}
+                {loading ? 'Posting...' : 'Share'}
               </button>
             </div>
           </div>
         </motion.div>
       )}
 
-      {/* Posts Container with Scroll */}
+      {/* Posts Container */}
       <div 
-        className="flex-1 overflow-y-auto"
-        style={{ scrollSnapType: 'y mandatory' }}
+        className="flex-1 overflow-y-auto p-4"
         ref={feedRef}
       >
         {posts.length === 0 && !loading ? (
-          <div className="h-screen flex flex-col items-center justify-center text-gray-300">
+          <div className="h-full flex flex-col items-center justify-center text-gray-500 py-12">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <p className="text-center">No posts yet. Be the first to share something!</p>
+            <p className="text-center mb-4">No posts yet. Be the first to share something!</p>
             <button
               onClick={() => setShowCreate(true)}
-              className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition text-sm"
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition text-sm"
             >
               Create a post
             </button>
           </div>
         ) : (
-          <div className="h-full">
+          <div className="max-w-2xl mx-auto">
             {posts.map((post) => (
-              <div 
-                key={post.id}
-                className="h-screen w-full flex items-center justify-center p-4"
-                style={{ scrollSnapAlign: 'start' }}
-              >
-                <div className="w-full max-w-2xl">
-                  <PostCard post={post} />
-                </div>
-              </div>
+              <PostCard key={post.id} post={post} />
             ))}
           </div>
         )}
